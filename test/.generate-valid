@@ -1,0 +1,10 @@
+echo "set -e"
+for input in valid/*.json
+do 
+expected=${input%.json}.parsed
+cat $input | ../bin/json_parse > $expected
+echo "# $input"
+echo "diff <(cat $input | ../bin/json_parse) ${input%.json}.parsed"
+echo "echo OK $input"
+
+done
