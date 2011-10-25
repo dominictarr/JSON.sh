@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 #add this feature to require...
-__filename=`readlink -f $0`
-. `dirname $__filename`/../parse.sh
+__filename=$(cd "$(dirname "$0")"; pwd)
+. $__filename/../parse.sh
 tokenize | parse
