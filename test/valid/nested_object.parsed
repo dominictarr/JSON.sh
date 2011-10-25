@@ -2,4 +2,4 @@
 ["object","empty"]	{}
 ["object"]	{"key":"value","empty":{}}
 ["number"]	5
-[]	{"empty":{"key":"value","empty":{}},"number":5}
+[]	{"object":{"key":"value","empty":{}},"number":5}
