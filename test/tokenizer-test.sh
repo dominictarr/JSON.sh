@@ -4,7 +4,7 @@ __filename=`readlink -f $0`
 __dirname=`dirname $__filename`
 cd $__dirname
 
-. $__dirname/../parse.sh
+. ../parse.sh
 set -e
 
 diff <( echo '"dah"'    | tokenize ) <( echo   '"dah"' )
