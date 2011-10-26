@@ -1,20 +1,23 @@
 #! /usr/bin/env bash
 
 cd ${0%/*}
-
 . ../parse.sh
-set -e
 
+i=0
+fails=0
 ttest () {
+  let i++
   local input="$1"; shift
   local expected="$(printf '%s\n' "$@")"
-  if ! echo "$input" | tokenize |diff -u - <(echo "$expected")
+  if echo "$input" | tokenize | diff -u - <(echo "$expected")
   then
+    echo "ok $i - $input"    
+  else 
+    echo "not ok $i - $input"
     let fails=$fails+1
   fi
 }
 
-fails=0
 ttest '"dah"'       '"dah"'
 ttest '""'          '""'
 ttest '["dah"]'     '[' '"dah"' ']'
