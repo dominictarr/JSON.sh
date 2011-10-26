@@ -11,17 +11,17 @@ echo "1..$tests"
 for input in invalid/*
 do
   let i+=1
-  if ../bin/json_parse < "$input" > outlog 2> errlog
+  if ../JSON.sh < "$input" > /tmp/JSON.sh_outlog 2> /tmp/JSON.sh_errlog 
   then
-    echo "not ok $i - cat $input | ../bin/json_parse should fail"
+    echo "not ok $i - cat $input | ../JSON.sh should fail"
     #this should be indented with '#' at the start.
     echo "OUTPUT WAS >>>"
-    cat outlog
+    cat /tmp/JSON.sh_outlog
     echo "<<<"
     let fails=$fails+1
   else
     echo "ok $i - $input was rejected"
-  
+    echo "#" `cat /tmp/JSON.sh_errlog`
   fi
 done
 echo "$fails test(s) failed"
