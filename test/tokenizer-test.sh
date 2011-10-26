@@ -1,40 +1,50 @@
 #! /usr/bin/env bash
 
-__filename=`readlink -f $0`
-__dirname=`dirname $__filename`
-cd $__dirname
+cd ${0%/*}
 
 . ../parse.sh
 set -e
 
-diff <( echo '"dah"'    | tokenize ) <( echo   '"dah"' )
-diff <( echo '""'    | tokenize ) <( echo   '""' )
-diff <( echo '["dah"]'  | tokenize ) <( printf '[\n\"dah\"\n]\n' )
-diff <( echo '"   "'  | tokenize ) <( printf '"   "\n' )
-diff <( printf '" \\"  "'  | tokenize ) <( printf '" \\"  "\n' )
+ttest () {
+  local input="$1"; shift
+  local expected="$(printf '%s\n' "$@")"
+  if ! echo "$input" | tokenize |diff -u - <(echo "$expected")
+  then
+    let fails=$fails+1
+  fi
+}
 
-diff \
-<( echo '["dah"]'  | tokenize ) \
-<( echo \
-'[
-"dah"
-]')
+fails=0
+ttest '"dah"'       '"dah"'
+ttest '""'          '""'
+ttest '["dah"]'     '[' '"dah"' ']'
+ttest '"   "'       '"   "'
+ttest '" \"  "' '" \"  "'
 
-diff <( echo '123'      | tokenize ) <( echo '123' )
-diff <( echo '123.142'  | tokenize ) <( echo '123.142' )
-diff <( echo '-123'     | tokenize ) <( echo   '-123')
+ttest '["dah"]' '[' '"dah"' ']'
 
-#diff <( echo '1e23' | tokenize ) <( printf '1e23\n' )
-diff <( echo '0.1'      | tokenize ) <( echo '0.1' )
-diff <( echo '-110'     | tokenize ) <( echo  '-110' )
-diff <( echo '-110.10'  | tokenize ) <( echo  '-110.10' )
-diff <( echo '-110e10'  | tokenize ) <( echo  '-110e10' )
-diff <( echo 'null'     | tokenize ) <( echo  'null' )
-diff <( echo 'true'     | tokenize ) <( echo  'true' )
-diff <( echo 'false'     | tokenize ) <( echo  'false' )
-diff <( echo '[ null   ,  -110e10, "null" ]' \
-                        | tokenize ) <( printf '[\nnull\n,\n-110e10\n,\n"null"\n]\n' )
-diff <( echo '{"e": false}'     | tokenize ) <( printf '{\n"e"\n:\nfalse\n}\n' )
-diff <( echo '{"e": "string"}'     | tokenize ) <( printf '{\n"e"\n:\n"string"\n}\n' )
+ttest '123'       '123'
+ttest '123.142'   '123.142'
+ttest '-123'        '-123'
 
-cat ../package.json | tokenize
+ttest '1e23'      '1e23'
+ttest '0.1'       '0.1'
+ttest '-110'       '-110'
+ttest '-110.10'    '-110.10'
+ttest '-110e10'    '-110e10'
+ttest 'null'       'null'
+ttest 'true'       'true'
+ttest 'false'      'false'
+ttest '[ null   ,  -110e10, "null" ]' \
+      '[' 'null' ',' '-110e10' ',' '"null"' ']'
+ttest '{"e": false}'     '{' '"e"' ':' 'false' '}'
+ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
+
+if ! cat ../package.json | tokenize >/dev/null
+then
+  let fails=$fails+1
+  echo "Tokenizing package.json failed!"
+fi
+
+echo "$fails test(s) failed"
+exit $fails

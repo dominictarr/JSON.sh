@@ -1,8 +1,6 @@
+#! /usr/bin/env bash
 
-__filename=`readlink -f $0`
-__dirname=`dirname $__filename`
-
-cd $__dirname
+cd ${0%/*}
 
 set -e
 fails=0
