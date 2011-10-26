@@ -16,21 +16,19 @@ echo  PWD=$PWD
 fails=0
 for input in invalid/*
 do
-  cat $input | ../bin/json_parse > outlog 2> errlog
-  ret=$?
-  if [ $ret -eq 0 ]; then
+  if ../bin/json_parse < "$input" > outlog 2> errlog
+  then
     echo "NOT OK: cat $input | ../bin/json_parse SHOULD FAIL"
     echo "OUTPUT WAS >>>"
     cat outlog
     echo "<<<"
     let fails=$fails+1
-  else
-    echo "OK: cat $input | ../bin/json_parse failed correctly"
-    echo "stderr was >>>"
-    cat errlog
-    echo "<<<"
+#  else
+#    echo "OK: cat $input | ../bin/json_parse failed correctly"
+#    echo "stderr was >>>"
+#    cat errlog
+#    echo "<<<"
   fi
-
 done
 echo "$fails test(s) failed"
 exit $fails

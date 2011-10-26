@@ -30,6 +30,6 @@ done
 if [ $fail -eq 0 ]; then
   echo -n 'SUCCESS '
 else
-  echo -n 'FAILOUR '
+  echo -n 'FAILURE '
 fi
 echo   $passed / $tests
