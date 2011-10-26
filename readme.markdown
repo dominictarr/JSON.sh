@@ -6,7 +6,7 @@ pipe json to it, and it traverses the json objects and prints out the
 path to the current object (as a JSON array) and then the object, without whitespace.
 
 ``` bash
-$ cat package.json | json_parse
+$ json_parse < package.json
 ["name"]	"JSON.sh"
 ["version"]	"0.0.0"
 ["description"]	""
