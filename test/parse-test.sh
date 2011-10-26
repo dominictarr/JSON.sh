@@ -1,15 +1,24 @@
+#! /usr/bin/env bash
 
-# Define BSD-friendly canonicalized readlink
-canonical_readlink () { cd `dirname $1`; __filename=`basename $1`; if [ -h "$__filename" ]; then canonical_readlink `readlink $__filename`; else echo "`pwd -P`/$__filename"; fi }
-
-__filename=$(canonical_readlink $0)
-__dirname=`dirname $__filename`
-cd $__dirname
+cd ${0%/*}
 
 . ../parse.sh
 
-cat ../package.json | tokenize | parse
+ptest () {
+  tokenize | parse >/dev/null
+}
 
-#echo '"oooo"  ' | tokenize | parse
-echo '[true, 1, [0, {}]]  ' | tokenize | parse
-echo '{"true": 1}' | tokenize | parse
+fails=0
+for input in '"oooo"  ' '[true, 1, [0, {}]]  ' '{"true": 1}'
+do
+  echo "$input" | ptest || let fails=$fails+1
+done
+
+if ! ptest < ../package.json
+then
+  echo "Parsing package.json failed!"
+  let fails=$fails+1
+fi
+
+echo "$fails test(s) failed"
+exit $fails
