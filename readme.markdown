@@ -26,3 +26,8 @@ a more complex example:
 curl registry.npmjs.org/express | ./bin/json_parse | egrep '\["versions","[^"]*"\]'
 ... try it and see
 ```
+
+## Examples
+
+If you have any examples with JSON.sh, streaming twitter, github, or whatever!
+please issue a pull request and i will include them.
