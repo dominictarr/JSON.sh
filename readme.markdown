@@ -6,7 +6,7 @@ pipe json to it, and it traverses the json objects and prints out the
 path to the current object (as a JSON array) and then the object, without whitespace.
 
 ``` bash
-$ cat package.json | json_parse
+$ < package.json ./bin/json_parse
 ["name"]	"JSON.sh"
 ["version"]	"0.0.0"
 ["description"]	""
@@ -23,12 +23,12 @@ $ cat package.json | json_parse
 a more complex example:
 
 ``` bash
-curl registry.npmjs.org/express | ./bin/json_parse | egrep '\["versions","[^"]*"\]'
+$ curl registry.npmjs.org/express | ./bin/json_parse | egrep '\["versions","[^"]*"\]'
 ... try it and see
 ```
 
 a boolean test for validating JSON (perhaps useful in a continuous integration system that catches exit codes...)
 
 ``` bash
-cat package.json | ./bin/json_parse >/dev/null; if [ $? -eq 0 ]; then echo "VALID JSON"; else echo "INVALID JSON"; exit 1; fi
+$ < package.json ./bin/json_parse >/dev/null; if [ $? -eq 0 ]; then echo "VALID JSON"; else echo "INVALID JSON"; exit 1; fi
 ```
