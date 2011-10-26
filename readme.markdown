@@ -26,3 +26,9 @@ a more complex example:
 curl registry.npmjs.org/express | ./bin/json_parse | egrep '\["versions","[^"]*"\]'
 ... try it and see
 ```
+
+a boolean test for validating JSON (perhaps useful in a continuous integration system that catches exit codes...)
+
+``` bash
+cat package.json | ./bin/json_parse >/dev/null; if [ $? -eq 0 ]; then echo "VALID JSON"; else echo "INVALID JSON"; exit 1; fi
+```
