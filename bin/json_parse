@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 
+# Define BSD-friendly canonicalized readlink
+canonical_readlink ()
+{
+	__filename=$1
+	cd `dirname $__filename`
+	__filename=`basename $__filename`
+	if [ -h "$__filename" ]
+	then
+		echo $__filename
+		canonical_readlink `readlink $__filename`
+	else
+		__dirname=`pwd -P`
+		echo "$__dirname/$__filename"
+	fi
+}
+
 #add this feature to require...
-__filename=$(cd "$(dirname "$0")"; pwd)
-. $__filename/../parse.sh
+__filename=$(canonical_readlink $0)
+. `dirname $__filename`/../parse.sh
 tokenize | parse
