@@ -1,3 +1,24 @@
+if isatty && [ ! -z "$(which isatty)" ];then
+    TXT_BLD=$(tput bold)
+    TXT_RED=$(tput setaf 1)
+    TXT_GREEN=$(tput setaf 2)
+    TXT_YLW=$(tput setaf 3)
+    TXT_BLUE=$(tput setaf 4)
+    TXT_PURPLE=$(tput setaf 5)
+    TXT_CYAN=$(tput setaf 6)
+    TXT_WHITE=$(tput setaf 7)
+    TXT_RESET=$(tput sgr0)
+else
+    TXT_BLD=
+    TXT_RED=
+    TXT_GREEN=
+    TXT_YLW=
+    TXT_BLUE=
+    TXT_PURPLE=
+    TXT_CYAN=
+    TXT_WHITE=
+    TXT_RESET=
+fi
 
 throw () {
   echo "$*" >&2
@@ -26,7 +47,7 @@ parse_array () {
       do
         parse_value "$1" "$index"
         let index=$index+1
-        ary="$ary""$value" 
+        ary="$ary""$value"
         read -r token
         case "$token" in
           ']') break ;;
@@ -60,7 +81,7 @@ parse_object () {
         esac
         read -r token
         parse_value "$1" "$key"
-        obj="$obj$key:$value"        
+        obj="$obj$TXT_BLUE$key$TXT_RESET:$TXT_RED$value$TXT_RESET"
         read -r token
         case "$token" in
           '}') break ;;
@@ -83,7 +104,7 @@ parse_value () {
     ''|[^0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token ;;
   esac
-  printf "[%s]\t%s\n" "$jpath" "$value"
+  printf "[%s]\t%s\n" "$TXT_GREEN$jpath$TXT_RESET" "$TXT_PURPLE$value$TXT_RESET"
 }
 
 parse () {

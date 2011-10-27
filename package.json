@@ -6,7 +6,7 @@
   { "type": "git"
   , "url": "https://github.com/dominictarr/JSON-sh.git" }
 , "bin": {
-    "json_parse": "./JSON.sh"
+    "json_parse": "./JSON.sh",
     "JSON.sh": "./JSON.sh"
   }
 , "dependencies": {}
