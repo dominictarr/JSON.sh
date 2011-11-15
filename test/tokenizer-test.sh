@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 cd ${0%/*}
-. ../parse.sh
+. ../JSON.sh
 
 i=0
 fails=0

@@ -2,7 +2,7 @@
 
 cd ${0%/*}
 
-. ../parse.sh
+. ../JSON.sh
 
 ptest () {
   tokenize | parse >/dev/null

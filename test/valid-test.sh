@@ -9,7 +9,7 @@ for input in valid/*.json
 do
   expected="${input%.json}.parsed"
   let i++
-  if ! ../bin/json_parse < "$input" | diff -u - "$expected" 
+  if ! ../JSON.sh < "$input" | diff -u - "$expected" 
   then
     echo "not ok $i - $input"
     let fails=$fails+1
