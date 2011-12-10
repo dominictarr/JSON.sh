@@ -31,3 +31,10 @@ curl registry.npmjs.org/express | ./bin/json_parse | egrep '\["versions","[^"]*"
 
 If you have any examples with JSON.sh, streaming twitter, github, or whatever!
 please issue a pull request and i will include them.
+
+## LICENSE
+
+This software is available under the following licenses:
+
+  * MIT
+  * Apache 2
