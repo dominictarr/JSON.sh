@@ -37,7 +37,7 @@ parse_array () {
       done
       ;;
   esac
-  value=`printf '[%s]' $ary`
+  value=`printf '[%s]' "$ary"`
 }
 
 parse_object () {
