@@ -1,6 +1,6 @@
 { "name": "JSON.sh"
 , "version": "0.0.5"
-, "description": ""
+, "description": "JSON parser written in bash"
 , "homepage": "http://github.com/dominictarr/JSON.sh"
 , "repository": 
   { "type": "git"
@@ -10,5 +10,5 @@
   }
 , "dependencies": {}
 , "devDependencies": {}
-, "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://bit.ly/dominictarr)"
+, "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://bit.ly/dominictarr)" 
 , "scripts": { "test": "./all-tests.sh" } }
