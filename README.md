@@ -27,6 +27,13 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 ... try it and see
 ```
 
+## Options
+
+-b
+> Brief output. Exclude empty fields and duplicate data. This
+> will improve performance for larger queries.
+
+
 ## Examples
 
 If you have any examples with JSON.sh, streaming twitter, github, or whatever!

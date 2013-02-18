@@ -4,6 +4,8 @@ throw () {
   exit 1
 }
 
+BRIEF=0
+
 tokenize () {
   local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
   local CHAR='[^[:cntrl:]"\\]'
@@ -37,7 +39,7 @@ parse_array () {
       done
       ;;
   esac
-  value=`printf '[%s]' "$ary"`
+  [[ $BRIEF -ne 1 ]] && value=`printf '[%s]' "$ary"`
 }
 
 parse_object () {
@@ -71,7 +73,7 @@ parse_object () {
       done
     ;;
   esac
-  value=`printf '{%s}' "$obj"`
+  [[ $BRIEF -ne 1 ]] && value=`printf '{%s}' "$obj"`
 }
 
 parse_value () {
@@ -83,7 +85,8 @@ parse_value () {
     ''|[^0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token ;;
   esac
-  printf "[%s]\t%s\n" "$jpath" "$value"
+  [[ ! ($BRIEF -eq 1 && ( -z $jpath || $value == '""' ) ) ]] \
+      && printf "[%s]\t%s\n" "$jpath" "$value"
 }
 
 parse () {
@@ -95,6 +98,8 @@ parse () {
     *) throw "EXPECTED EOF GOT $token" ;;
   esac
 }
+
+[[ -n $1 && $1 == "-b" ]] && BRIEF=1
 
 if [ $0 = $BASH_SOURCE ];
 then
