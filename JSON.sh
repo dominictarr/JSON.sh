@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 throw () {
   echo "$*" >&2
