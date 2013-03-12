@@ -40,7 +40,7 @@ parse_array () {
       done
       ;;
   esac
-  [[ $BRIEF -ne 1 ]] && value=`printf '[%s]' "$ary"`
+  [ $BRIEF -ne 1 ] && value=`printf '[%s]' "$ary"`
 }
 
 parse_object () {
@@ -83,7 +83,7 @@ parse_value () {
     '{') parse_object "$jpath" ;;
     '[') parse_array  "$jpath" ;;
     # At this point, the only valid single-character tokens are digits.
-    ''|[^0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
+    ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token ;;
   esac
   ! ([ $BRIEF -eq 1 ] && ([ -z $jpath ] || [ $value = '""' ])) \
