@@ -9,16 +9,16 @@ tests=0
 #echo PLAN ${#all_tests}
 for test in test/*.sh ;
 do
-  let tests=$tests+1
+  tests=$((tests+1))
   echo TEST: $test
-  bash $test
+  ./$test
   ret=$? 
   if [ $ret -eq 0 ] ; then
     echo OK: ---- $test
-    let passed=$passed+1
+    passed=$((passed+1))
   else
     echo FAIL: $test $fail
-    let fail=$fail+$ret
+    fail=$((fail+ret))
   fi
 done
 

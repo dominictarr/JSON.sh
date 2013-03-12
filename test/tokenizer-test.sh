@@ -6,7 +6,7 @@ cd ${0%/*}
 i=0
 fails=0
 ttest () {
-  let i++
+  i=$((i+1))
   local input="$1"; shift
   local expected="$(printf '%s\n' "$@")"
   if echo "$input" | tokenize | diff -u - <(echo "$expected")
@@ -14,7 +14,7 @@ ttest () {
     echo "ok $i - $input"    
   else 
     echo "not ok $i - $input"
-    let fails=$fails+1
+    fails=$((fails+1))
   fi
 }
 
@@ -45,7 +45,7 @@ ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
 
 if ! cat ../package.json | tokenize >/dev/null
 then
-  let fails=$fails+1
+  fails=$((fails+1))
   echo "Tokenizing package.json failed!"
 fi
 

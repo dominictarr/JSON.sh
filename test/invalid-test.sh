@@ -10,7 +10,7 @@ tests=`ls invalid/* -1l | wc -l`
 echo "1..$tests"
 for input in invalid/*
 do
-  let i+=1
+  i=$((i+1))
   if ../JSON.sh < "$input" > /tmp/JSON.sh_outlog 2> /tmp/JSON.sh_errlog 
   then
     echo "not ok $i - cat $input | ../JSON.sh should fail"
@@ -18,7 +18,7 @@ do
     echo "OUTPUT WAS >>>"
     cat /tmp/JSON.sh_outlog
     echo "<<<"
-    let fails=$fails+1
+    fails=$((fails+1))
   else
     echo "ok $i - $input was rejected"
     echo "#" `cat /tmp/JSON.sh_errlog`
