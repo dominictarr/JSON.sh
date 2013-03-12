@@ -28,7 +28,7 @@ parse_array () {
       while :
       do
         parse_value "$1" "$index"
-        let index=$index+1
+        index=$((index+1))
         ary="$ary""$value" 
         read -r token
         case "$token" in
@@ -40,7 +40,7 @@ parse_array () {
       done
       ;;
   esac
-  [[ $BRIEF -ne 1 ]] && value=`printf '[%s]' "$ary"`
+  [ $BRIEF -ne 1 ] && value=`printf '[%s]' "$ary"`
 }
 
 parse_object () {
@@ -74,7 +74,7 @@ parse_object () {
       done
     ;;
   esac
-  [[ $BRIEF -ne 1 ]] && value=`printf '{%s}' "$obj"`
+  [ $BRIEF -ne 1 ] && value=`printf '{%s}' "$obj"`
 }
 
 parse_value () {
@@ -83,10 +83,10 @@ parse_value () {
     '{') parse_object "$jpath" ;;
     '[') parse_array  "$jpath" ;;
     # At this point, the only valid single-character tokens are digits.
-    ''|[^0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
+    ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token ;;
   esac
-  [[ ! ($BRIEF -eq 1 && ( -z $jpath || $value == '""' ) ) ]] \
+  ! ([ $BRIEF -eq 1 ] && ([ -z $jpath ] || [ $value = '""' ])) \
       && printf "[%s]\t%s\n" "$jpath" "$value"
 }
 
@@ -100,9 +100,9 @@ parse () {
   esac
 }
 
-[[ -n $1 && $1 == "-b" ]] && BRIEF=1
+([ -n "$1" ] && [ "$1" = "-b" ]) && BRIEF=1
 
-if [ $0 = $BASH_SOURCE ];
+if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
 then
   tokenize | parse
 fi
