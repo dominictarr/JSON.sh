@@ -102,7 +102,7 @@ parse () {
 
 ([ -n "$1" ] && [ "$1" = "-b" ]) && BRIEF=1
 
-if [ $0 = $BASH_SOURCE ];
+if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
 then
   tokenize | parse
 fi
