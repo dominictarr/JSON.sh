@@ -14,8 +14,11 @@ tokenize () {
   local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
-  egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." --color=never |
-    egrep -v "^$SPACE$"  # eat whitespace
+  {
+    egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." --color=never 2>/dev/null ||
+    egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." # busybox egrep
+  } |
+     egrep -v "^$SPACE$"  # eat whitespace
 }
 
 parse_array () {
@@ -41,6 +44,7 @@ parse_array () {
       ;;
   esac
   [ $BRIEF -ne 1 ] && value=`printf '[%s]' "$ary"` || value=
+  :
 }
 
 parse_object () {
@@ -75,6 +79,7 @@ parse_object () {
     ;;
   esac
   [ $BRIEF -ne 1 ] && value=`printf '{%s}' "$obj"` || value=
+  :
 }
 
 parse_value () {
@@ -86,8 +91,9 @@ parse_value () {
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token ;;
   esac
-  ! ([ $BRIEF -eq 1 ] && ([ -z $jpath ] || [ "$value" = '' ])) \
+  ! ([ $BRIEF -eq 1 ] && ([ -z "$jpath" ] || [ "$value" = '' ])) \
       && printf "[%s]\t%s\n" "$jpath" "$value"
+  :
 }
 
 parse () {
