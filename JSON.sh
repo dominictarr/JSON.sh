@@ -89,10 +89,12 @@ parse_value () {
     '[') parse_array  "$jpath" ;;
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
-    *) value=$token ;;
+    *) value=$token
+       [ $BRIEF -eq 1 ] && \
+       [ "$value" != '""' ] && printf "[%s]\t%s\n" "$jpath" "$value"
+       ;;
   esac
-  ! ([ $BRIEF -eq 1 ] && ([ -z "$jpath" ] || [ "$value" = '' ])) \
-      && printf "[%s]\t%s\n" "$jpath" "$value"
+  [ $BRIEF -eq 0 ] && printf "[%s]\t%s\n" "$jpath" "$value"
   :
 }
 
