@@ -5,7 +5,42 @@ throw () {
   exit 1
 }
 
-BRIEF=0
+LEAFONLY=0
+PRUNEMPTY=0
+
+usage() {
+  echo
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-h]"
+  echo
+  echo "-p - Prune empty. Exclude fields with empty values."
+  echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
+  echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo
+}
+
+parse_options() {
+  set -- "$@"
+  while true
+  do
+    case $1 in
+      -h) usage
+          exit 0
+      ;;
+      -b) LEAFONLY=1
+          PRUNEMPTY=1
+      ;;
+      -l) LEAFONLY=1
+      ;;
+      -p) PRUNEMPTY=1
+      ;;
+      ?*) echo "ERROR: Unknown option."
+          usage
+          exit 0
+      ;;
+    esac
+    shift 1 || break
+  done
+}
 
 tokenize () {
   local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
@@ -43,7 +78,7 @@ parse_array () {
       done
       ;;
   esac
-  [ $BRIEF -ne 1 ] && value=`printf '[%s]' "$ary"` || value=
+  value=`printf '[%s]' "$ary"` || value=
   :
 }
 
@@ -78,23 +113,29 @@ parse_object () {
       done
     ;;
   esac
-  [ $BRIEF -ne 1 ] && value=`printf '{%s}' "$obj"` || value=
+  value=`printf '{%s}' "$obj"` || value=
   :
 }
 
 parse_value () {
-  local jpath="${1:+$1,}$2"
+  local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
     '{') parse_object "$jpath" ;;
     '[') parse_array  "$jpath" ;;
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token
-       [ $BRIEF -eq 1 ] && \
-       [ "$value" != '""' ] && printf "[%s]\t%s\n" "$jpath" "$value"
+       isleaf=1
+       [ "$value" == '""' ] && isempty=1
        ;;
   esac
-  [ $BRIEF -eq 0 ] && printf "[%s]\t%s\n" "$jpath" "$value"
+  [ "$value" == '' ] && return
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNEMPTY" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNEMPTY -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNEMPTY" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
+    [ $PRUNEMPTY -eq 1 ] && [ $isempty -eq 0 ] && print=1
+  [ "$print" -eq 1 ] && printf "[%s]\t%s\n" "$jpath" "$value"
   :
 }
 
@@ -108,7 +149,7 @@ parse () {
   esac
 }
 
-([ -n "$1" ] && [ "$1" = "-b" ]) && BRIEF=1
+parse_options "$@"
 
 if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
 then
