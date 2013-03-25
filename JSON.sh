@@ -5,6 +5,7 @@ throw () {
   exit 1
 }
 
+BRIEF=0
 LEAFONLY=0
 PRUNEMPTY=0
 
@@ -26,7 +27,8 @@ parse_options() {
       -h) usage
           exit 0
       ;;
-      -b) LEAFONLY=1
+      -b) BRIEF=1
+          LEAFONLY=1
           PRUNEMPTY=1
       ;;
       -l) LEAFONLY=1
@@ -78,7 +80,7 @@ parse_array () {
       done
       ;;
   esac
-  value=`printf '[%s]' "$ary"` || value=
+  [ "$BRIEF" -eq 0 ] && value=`printf '[%s]' "$ary"` || value=
   :
 }
 
@@ -113,7 +115,7 @@ parse_object () {
       done
     ;;
   esac
-  value=`printf '{%s}' "$obj"` || value=
+  [ "$BRIEF" -eq 0 ] && value=`printf '{%s}' "$obj"` || value=
   :
 }
 
