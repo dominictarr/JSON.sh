@@ -7,7 +7,7 @@ throw () {
 
 BRIEF=0
 LEAFONLY=0
-PRUNEMPTY=0
+PRUNE=0
 
 usage() {
   echo
@@ -29,11 +29,11 @@ parse_options() {
       ;;
       -b) BRIEF=1
           LEAFONLY=1
-          PRUNEMPTY=1
+          PRUNE=1
       ;;
       -l) LEAFONLY=1
       ;;
-      -p) PRUNEMPTY=1
+      -p) PRUNE=1
       ;;
       ?*) echo "ERROR: Unknown option."
           usage
@@ -132,11 +132,11 @@ parse_value () {
        ;;
   esac
   [ "$value" == '' ] && return
-  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNEMPTY" -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNEMPTY -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNEMPTY" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
   [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
-    [ $PRUNEMPTY -eq 1 ] && [ $isempty -eq 0 ] && print=1
+    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1
   [ "$print" -eq 1 ] && printf "[%s]\t%s\n" "$jpath" "$value"
   :
 }
