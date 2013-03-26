@@ -38,6 +38,9 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 -p
 > Prune empty. Exclude fields with empty values.
 
+-h
+> Show help text.
+
 ## Examples
 
 If you have any examples with JSON.sh, streaming twitter, github, or whatever!
