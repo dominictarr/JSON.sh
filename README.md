@@ -30,9 +30,16 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 ## Options
 
 -b
-> Brief output. Exclude empty fields and duplicate data. This
-> will improve performance for larger queries.
+> Brief output. Combines 'Leaf only' and 'Prune empty' options.
 
+-l
+> Leaf only. Only show leaf nodes, which stops data duplication.
+
+-p
+> Prune empty. Exclude fields with empty values.
+
+-h
+> Show help text.
 
 ## Examples
 
