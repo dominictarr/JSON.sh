@@ -42,7 +42,7 @@ parse_options() {
           exit 0
       ;;
     esac
-    shift 1 || break
+    shift 1
     ARGN=$((ARGN-1))
   done
 }
