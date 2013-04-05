@@ -22,7 +22,8 @@ usage() {
 
 parse_options() {
   set -- "$@"
-  while true
+  local ARGN=$#
+  while [ $ARGN -ne 0 ]
   do
     case $1 in
       -h) usage
@@ -41,7 +42,8 @@ parse_options() {
           exit 0
       ;;
     esac
-    shift 1 || break
+    shift 1
+    ARGN=$((ARGN-1))
   done
 }
 
@@ -129,10 +131,10 @@ parse_value () {
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token
        isleaf=1
-       [ "$value" == '""' ] && isempty=1
+       [ "$value" = '""' ] && isempty=1
        ;;
   esac
-  [ "$value" == '' ] && return
+  [ "$value" = '' ] && return
   [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
   [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1
   [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
