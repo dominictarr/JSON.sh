@@ -47,38 +47,40 @@ parse_options() {
   done
 }
 
+awk_egrep () {
+  local pattern_string=$1
+
+  gawk '{
+    while ($0) {
+      start=match($0, pattern);
+      token=substr($0, start, RLENGTH);
+      print token;
+      $0=substr($0, start+RLENGTH);
+    }
+  }' pattern=$pattern_string
+}
+
 tokenize () {
-  local egrep_has_only_matching=`egrep --help | egrep "\-\-only\-matching"`
-  if [ -n "$egrep_has_only_matching" ]
-  then
-    local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    local CHAR='[^[:cntrl:]"\\]'
-  else
-    local ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    local CHAR='[^[:cntrl:]"\\\\]'
-  fi
+  local GREP='egrep -ao --color=never'
+  local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+  local CHAR='[^[:cntrl:]"\\]'
+
+  echo "test string" | $GREP "test" &>/dev/null ||
+  GREP='egrep -ao'
+
+  echo "test string" | egrep -o "test" &>/dev/null ||
+  {
+    GREP=awk_egrep
+    ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\\\]'
+  }
+
   local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
   local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
   
-  if [ -n "$egrep_has_only_matching" ]
-  then
-    {
-      egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." --color=never 2>/dev/null ||
-      egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." # busybox egrep
-    } |
-       egrep -v "^$SPACE$"  # eat whitespace
-  else
-    gawk '{
-      while ($0) {
-        start=match($0, patern);
-        token=substr($0, start, RLENGTH);
-        print token;
-        $0=substr($0, start+RLENGTH);
-      }
-    }' patern="$STRING|$NUMBER|$KEYWORD|$SPACE|."
-  fi
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|."
 }
 
 parse_array () {
