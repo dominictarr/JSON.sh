@@ -48,17 +48,37 @@ parse_options() {
 }
 
 tokenize () {
-  local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-  local CHAR='[^[:cntrl:]"\\]'
+  local egrep_has_only_matching=`egrep --help | egrep "\-\-only\-matching"`
+  if [ -n "$egrep_has_only_matching" ]
+  then
+    local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    local CHAR='[^[:cntrl:]"\\]'
+  else
+    local ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    local CHAR='[^[:cntrl:]"\\\\]'
+  fi
   local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
   local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
-  {
-    egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." --color=never 2>/dev/null ||
-    egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." # busybox egrep
-  } |
-     egrep -v "^$SPACE$"  # eat whitespace
+  
+  if [ -n "$egrep_has_only_matching" ]
+  then
+    {
+      egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." --color=never 2>/dev/null ||
+      egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." # busybox egrep
+    } |
+       egrep -v "^$SPACE$"  # eat whitespace
+  else
+    gawk '{
+      while ($0) {
+        start=match($0, patern);
+        token=substr($0, start, RLENGTH);
+        print token;
+        $0=substr($0, start+RLENGTH);
+      }
+    }' patern="$STRING|$NUMBER|$KEYWORD|$SPACE|."
+  fi
 }
 
 parse_array () {
