@@ -6,8 +6,9 @@ cd ${0%/*}
 # http://en.wikipedia.org/wiki/Test_Anything_Protocol
 
 fails=0
-tests=`ls invalid/* -1l | wc -l`
-echo "1..$tests"
+tests=`ls invalid/* -1 | wc -l`
+
+echo "1..${tests##* }"
 for input in invalid/*
 do
   i=$((i+1))
