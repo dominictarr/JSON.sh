@@ -9,7 +9,8 @@ ttest () {
   i=$((i+1))
   local input="$1"; shift
   local expected="$(printf '%s\n' "$@")"
-  if echo "$input" | tokenize | diff -u - <(echo "$expected")
+  echo "$expected" > /tmp/json_ttest_expected
+  if echo "$input" | tokenize | diff -u - /tmp/json_ttest_expected
   then
     echo "ok $i - $input"    
   else 
