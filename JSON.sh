@@ -47,18 +47,47 @@ parse_options() {
   done
 }
 
+awk_egrep () {
+  local pattern_string=$1
+
+  gawk '{
+    while ($0) {
+      start=match($0, pattern);
+      token=substr($0, start, RLENGTH);
+      print token;
+      $0=substr($0, start+RLENGTH);
+    }
+  }' pattern=$pattern_string
+}
+
 tokenize () {
-  local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-  local CHAR='[^[:cntrl:]"\\]'
+  local GREP
+  local ESCAPE
+  local CHAR
+
+  if echo "test string" | egrep -ao --color=never "test" &>/dev/null
+  then
+    GREP='egrep -ao --color=never'
+  else
+    GREP='egrep -ao'
+  fi
+
+  if echo "test string" | egrep -o "test" &>/dev/null
+  then
+    ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\]'
+  else
+    GREP=awk_egrep
+    ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\\\]'
+  fi
+
   local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
   local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
-  {
-    egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." --color=never 2>/dev/null ||
-    egrep -ao "$STRING|$NUMBER|$KEYWORD|$SPACE|." # busybox egrep
-  } |
-     egrep -v "^$SPACE$"  # eat whitespace
+
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
 }
 
 parse_array () {
