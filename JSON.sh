@@ -61,26 +61,33 @@ awk_egrep () {
 }
 
 tokenize () {
-  local GREP='egrep -ao --color=never'
-  local ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-  local CHAR='[^[:cntrl:]"\\]'
+  local GREP
+  local ESCAPE
+  local CHAR
 
-  echo "test string" | $GREP "test" &>/dev/null ||
-  GREP='egrep -ao'
+  if echo "test string" | egrep -ao --color=never "test" &>/dev/null
+  then
+    GREP='egrep -ao --color=never'
+  else
+    GREP='egrep -ao'
+  fi
 
-  echo "test string" | egrep -o "test" &>/dev/null ||
-  {
+  if echo "test string" | egrep -o "test" &>/dev/null
+  then
+    ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\]'
+  else
     GREP=awk_egrep
     ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\\\]'
-  }
+  fi
 
   local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
   local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
-  
-  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|."
+
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
 }
 
 parse_array () {
