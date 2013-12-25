@@ -51,6 +51,15 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 If you have any examples with JSON.sh, streaming twitter, github, or whatever!
 please issue a pull request and i will include them.
 
+## installation
+
+install via npm or from AUR on archlinux
+
+* `npm install -g JSON.sh`
+* `yaourt -Sy json-sh`
+  ([json-sh on aur](https://aur.archlinux.org/packages/json-sh/)
+  thanks to [kremlin-](https://github.com/kremlin-))
+
 ## LICENSE
 
 This software is available under the following licenses:
