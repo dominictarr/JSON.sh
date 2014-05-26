@@ -183,9 +183,8 @@ parse () {
   esac
 }
 
-parse_options "$@"
-
 if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
 then
+  parse_options "$@"
   tokenize | parse
 fi
