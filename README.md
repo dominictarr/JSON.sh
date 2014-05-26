@@ -47,11 +47,6 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 * [kristopolous/TickTick](https://github.com/kristopolous/TickTick) Object Oriented BASH
 * [archan937/jsonv.sh](https://github.com/archan937/jsonv.sh)
 
-## Examples
-
-If you have any examples with JSON.sh, streaming twitter, github, or whatever!
-please issue a pull request and i will include them.
-
 ## Installation
 
 install via npm or from AUR on archlinux
