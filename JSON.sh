@@ -8,14 +8,16 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+NORMALIZE_SOLIDUS=0
 
 usage() {
   echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-h]"
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-s] [-h]"
   echo
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo "-s - Remove escaping of the solidus symbol (stright slash)."
   echo "-h - This help text."
   echo
 }
@@ -36,6 +38,8 @@ parse_options() {
       -l) LEAFONLY=1
       ;;
       -p) PRUNE=1
+      ;;
+      -s) NORMALIZE_SOLIDUS=1
       ;;
       ?*) echo "ERROR: Unknown option."
           usage
@@ -159,6 +163,8 @@ parse_value () {
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token
+       # if asked, replace solidus ("\/") in json strings with normalized value: "/"
+       [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=${value//\\\//\/}
        isleaf=1
        [ "$value" = '""' ] && isempty=1
        ;;
