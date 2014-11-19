@@ -38,6 +38,9 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 -p
 > Prune empty. Exclude fields with empty values.
 
+-s
+> Remove escaping of the solidus symbol (stright slash).
+
 -h
 > Show help text.
 
