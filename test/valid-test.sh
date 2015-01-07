@@ -9,16 +9,17 @@ cd ${0%/*}
 fails=0
 i=0
 tests=`ls valid/*.json -1l | wc -l`
-tests=$(($tests*3))
+tests=$(($tests*4))
 echo "1..$tests"
 for input in valid/*.json
 do
-  for EXT in parsed sorted normalized; do
+  for EXT in parsed sorted normalized normalized_sorted; do
     expected="${input%.json}.$EXT"
     i=$((i+1))
     case "$EXT" in
       sorted) OPTIONS="-S='-n -r'" ;;
       normalized) OPTIONS="-N" ;;
+      normalized_sorted) OPTIONS="-N=-n" ;;
       parsed|*) OPTIONS="" ;;
     esac
     if ! eval ../JSON.sh $OPTIONS < "$input" | diff -u - "$expected" 
