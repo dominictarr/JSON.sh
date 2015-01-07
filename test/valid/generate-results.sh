@@ -9,20 +9,39 @@ export C
 
 JSONSH=../../JSON.sh
 
-for F in *.json ; do
+generate() {
+	F="$1"
+	[ -s "$F" ] || return
+
 	B="`basename "$F" .json`"
 	echo "=== Generating results for '$F'..."
+	RES=0
 
 	EXT=parsed
-	$JSONSH < "$F" > "$B.$EXT" || echo "ERROR with $EXT"
+	$JSONSH < "$F" > "$B.$EXT" || \
+	    { RES=$?; echo "ERROR with $EXT"; }
 
 	EXT=sorted
-	$JSONSH -S="-n -r" < "$F" > "$B.$EXT" || echo "ERROR with $EXT"
+	$JSONSH -S="-n -r" < "$F" > "$B.$EXT" || \
+	    { RES=$?; echo "ERROR with $EXT"; }
 
 	EXT=normalized
-	$JSONSH -N < "$F" > "$B.$EXT" || echo "ERROR with $EXT"
+	$JSONSH -N < "$F" > "$B.$EXT" || \
+	    { RES=$?; echo "ERROR with $EXT"; }
 
 	EXT=normalized_sorted
-	$JSONSH -N='-n' < "$F" > "$B.$EXT" || echo "ERROR with $EXT"
-done
+	$JSONSH -N='-n' < "$F" > "$B.$EXT" || \
+	    { RES=$?; echo "ERROR with $EXT"; }
 
+	return $RES
+}
+
+if [ $# -gt 0 ]; then
+    for F in "$@" ; do
+	generate "$F"
+    done
+else
+    for F in *.json ; do
+	generate "$F"
+    done
+fi
