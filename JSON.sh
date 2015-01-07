@@ -14,10 +14,11 @@ LEAFONLY=0
 PRUNE=0
 SORTDATA=""
 NORMALIZE=0
+TOXIC_NEWLINE=0
 
 usage() {
   echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-N] [-S|-S='args']"
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-N] [-S|-S='args'] [--no-newline]"
   echo "       JSON.sh [-N|-N='args'] < markup.json"
   echo "       JSON.sh [-h]"
   echo "-h - This help text."
@@ -25,6 +26,8 @@ usage() {
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo "--no-newline - rather than concatenating detected line breaks in markup,"
+  echo "     return with error when this is seen in input"
   echo
   echo "Sorting is also available, although limited to single-line strings in"
   echo "the markup (multilines are automatically escaped into backslash+n):"
@@ -71,6 +74,9 @@ parse_options() {
       ;;
       -S=*) SORTDATA="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
       ;;
+      --no-newline)
+          TOXIC_NEWLINE=1
+      ;;
       ?*) echo "ERROR: Unknown option '$1'."
           usage
           exit 0
@@ -104,6 +110,7 @@ strip_newlines() {
   local NUMQ
   local ODD
   local INSTRING=0
+  local LINENUM=0
 
   # the first "grep" should ensure that input has a trailing newline
   grep '' | while IFS="" read -r ILINE; do
@@ -114,8 +121,12 @@ strip_newlines() {
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
     ODD="$(($NUMQ%2))"
+    LINENUM="$(($LINENUM+1))"
 
     if [ "$ODD" -eq 1 -a "$INSTRING" -eq 0 ]; then
+      [ "$TOXIC_NEWLINE" = 1 ] && \
+        echo "Invalid JSON markup detected: newline in a string value: at line #$LINENUM" >&2 && \
+        exit 121
       printf '%s\\n' "$ILINE"
       INSTRING=1
       continue
