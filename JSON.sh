@@ -14,11 +14,12 @@ LEAFONLY=0
 PRUNE=0
 SORTDATA=""
 NORMALIZE=0
+EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 
 usage() {
   echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-N] [-S|-S='args'] [--no-newline]"
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline]"
   echo "       JSON.sh [-N|-N='args'] < markup.json"
   echo "       JSON.sh [-h]"
   echo "-h - This help text."
@@ -26,6 +27,10 @@ usage() {
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo "-x 'regex' - rather than showing all document from the root element,"
+  echo "     extract the items rooted at path(s) matching the regex (see the"
+  echo "     comma-separated list of nested hierarchy names in general output,"
+  echo "     brackets not included) e.g. regex='^\"level1\",\"level2arr\",0'"
   echo "--no-newline - rather than concatenating detected line breaks in markup,"
   echo "     return with error when this is seen in input"
   echo
@@ -35,6 +40,8 @@ usage() {
   echo "     'sort' objects by key names and then values, and arrays by values"
   echo "-S='args' - use 'sort \$args' for content sorting, e.g. use -S='-n -r'"
   echo "     for reverse numeric sort"
+  echo
+  echo "An input JSON markup can be normalized into single-line no-whitespace:"
   echo "-N - Normalize the input JSON markup into a single-line JSON output;"
   echo "     in this mode syntax and spacing are normalized, data order remains"
   echo "-N='args' - Normalize the input JSON markup into a single-line JSON"
@@ -73,6 +80,9 @@ parse_options() {
       -S) SORTDATA="sort"
       ;;
       -S=*) SORTDATA="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
+      ;;
+      -x) EXTRACT_JPATH="$2"
+          shift
       ;;
       --no-newline)
           TOXIC_NEWLINE=1
@@ -286,6 +296,11 @@ parse_value () {
   [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
   [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
     [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1
+
+  if [ "$print" -eq 1 -a -n "$EXTRACT_JPATH" ] ; then
+    ### BASH regex matching:
+    [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=0
+  fi
 
   [ "$print" -eq 1 ] && printf "[%s]\t%s\n" "$jpath" "$value"
   :
