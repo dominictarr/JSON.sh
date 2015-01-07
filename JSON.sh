@@ -16,10 +16,11 @@ SORTDATA=""
 NORMALIZE=0
 EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
+DEBUG=0
 
 usage() {
   echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline]"
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]"
   echo "       JSON.sh [-N|-N='args'] < markup.json"
   echo "       JSON.sh [-h]"
   echo "-h - This help text."
@@ -33,6 +34,7 @@ usage() {
   echo "     brackets not included) e.g. regex='^\"level1\",\"level2arr\",0'"
   echo "--no-newline - rather than concatenating detected line breaks in markup,"
   echo "     return with error when this is seen in input"
+  echo "-d - Enable debugging traces to stderr"
   echo
   echo "Sorting is also available, although limited to single-line strings in"
   echo "the markup (multilines are automatically escaped into backslash+n):"
@@ -86,6 +88,8 @@ parse_options() {
       ;;
       --no-newline)
           TOXIC_NEWLINE=1
+      ;;
+      -d) DEBUG=$(($DEBUG+1))
       ;;
       ?*) echo "ERROR: Unknown option '$1'."
           usage
@@ -272,8 +276,12 @@ $key:$value"
 parse_value () {
   local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
-    '{') parse_object "$jpath" ;;
-    '[') parse_array  "$jpath" ;;
+    '{') parse_object "$jpath"
+       [ "$value" = '{}' ] && isempty=1
+       ;;
+    '[') parse_array  "$jpath"
+       [ "$value" = '[]' ] && isempty=1
+       ;;
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token
@@ -292,17 +300,26 @@ parse_value () {
   [ "$value" = '' ] && return
 
   [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=2
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=3
   [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
-    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1
+    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=4
+  ### A special case of an empty array or object - for leaf printing
+  ### without pruning, we are interested in these:
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 0 ] && [ "$isempty" -eq 1 ] && \
+    [ $PRUNE -eq 0 ] && print=5
 
-  if [ "$print" -eq 1 -a -n "$EXTRACT_JPATH" ] ; then
+  if [ "$print" -ne 0 -a -n "$EXTRACT_JPATH" ] ; then
     ### BASH regex matching:
-    [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=0
+    [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=-1
   fi
 
-  [ "$print" -eq 1 ] && printf "[%s]\t%s\n" "$jpath" "$value"
+  [ "$DEBUG" -gt 0 ] && \
+    echo "=== KEY='$jpath' VALUE='$value' B='$BRIEF'" \
+	"isleaf='$isleaf'/L='$LEAFONLY' isempty='$isempty'/P='$PRUNE':" \
+	"print='$print'" >&2
+
+  [ "$print" -gt 0 ] && printf "[%s]\t%s\n" "$jpath" "$value"
   :
 }
 
