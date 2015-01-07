@@ -40,6 +40,11 @@ usage() {
   echo
 }
 
+unquote() {
+    # Remove single or double quotes surrounding the token
+    sed "s,^'\(.*\)'\$,\1," | sed 's,^\"\(.*\)\"$,\1,'
+}
+
 parse_options() {
   set -- "$@"
   local ARGN=$#
@@ -59,14 +64,14 @@ parse_options() {
       ;;
       -N) NORMALIZE=1
       ;;
-      -N=*) SORTDATA="sort `echo "$1" | sed 's,^-N=,,'`"
+      -N=*) SORTDATA="sort `echo "$1" | sed 's,^-N=,,' | unquote `"
           NORMALIZE=1
       ;;
       -S) SORTDATA="sort"
       ;;
-      -S=*) SORTDATA="sort `echo "$1" | sed 's,^-S=,,'`"
+      -S=*) SORTDATA="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
       ;;
-      ?*) echo "ERROR: Unknown option."
+      ?*) echo "ERROR: Unknown option '$1'."
           usage
           exit 0
       ;;
@@ -195,7 +200,7 @@ $value"
       ;;
   esac
   if [ -n "$SORTDATA" ]; then
-    ary="`echo "$aryml" | $SORTDATA | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
+    ary="`echo -E "$aryml" | $SORTDATA | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
   fi
   [ "$BRIEF" -eq 0 ] && value=`printf '[%s]' "$ary"` || value=
   :
@@ -238,7 +243,7 @@ $key:$value"
     ;;
   esac
   if [ -n "$SORTDATA" ]; then
-    obj="`echo "$objml" | $SORTDATA | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
+    obj="`echo -E "$objml" | $SORTDATA | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
   fi
   [ "$BRIEF" -eq 0 ] && value=`printf '{%s}' "$obj"` || value=
   :
