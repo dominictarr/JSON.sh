@@ -179,7 +179,6 @@ tokenize () {
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
-  strip_newlines | \
   $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
 }
 
@@ -303,6 +302,7 @@ parse () {
 }
 
 smart_parse() {
+  strip_newlines | \
   tokenize | if [ -n "$SORTDATA" ] ; then
       ( NORMALIZE=1 LEAFONLY=0 BRIEF=0 parse ) \
       | tokenize | parse
