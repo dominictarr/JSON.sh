@@ -1,0 +1,5 @@
+["s4"]	"qwe"
+["s1\ns2 \" s3 "]	"abs"
+["d2"]	123
+["d2"]	"qwer\nt\nyu"
+[]	{"s4":"qwe","s1\ns2 \" s3 ":"abs","d2":123,"d2":"qwer\nt\nyu"}
