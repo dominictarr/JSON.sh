@@ -248,14 +248,17 @@ tokenize () {
     CHAR='[^[:cntrl:]"\\\\]'
   fi
 
-  local STRINGVAL="$CHAR*($ESCAPE$CHAR*)*"
+  # Allow tabs inside strings
+  local CHART="($CHAR|[[:blank:]])"
+  local STRINGVAL="$CHART*($ESCAPE$CHART*)*"
   local STRING="(\"$STRINGVAL\")"
   local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$" | \
+  tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
 }
 
 parse_array () {
