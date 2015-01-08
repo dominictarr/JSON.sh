@@ -17,6 +17,7 @@ NORMALIZE=0
 EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 DEBUG=0
+COOKASTRING=0
 
 usage() {
   echo
@@ -49,6 +50,12 @@ usage() {
   echo "-N='args' - Normalize the input JSON markup into a single-line JSON"
   echo "     output with contents sorted like for -S='args', e.g. use -N='-n'"
   echo "     This is equivalent to -N -S='args', just more compact to write"
+  echo
+  echo "To help JSON-related scripting, with '-Q' an input plaintext can be cooked"
+  echo "into a string valid for JSON (backslashes, quotes and newlines escaped,"
+  echo "with no trailing newline); after cooking, the script exits:"
+  echo '       COOKEDSTRING="`somecommand 2>&1 | JSON.sh -Q`"'
+  echo "This can also be used to pack JSON in JSON."
   echo
 }
 
@@ -90,6 +97,8 @@ parse_options() {
           TOXIC_NEWLINE=1
       ;;
       -d) DEBUG=$(($DEBUG+1))
+      ;;
+      -Q) COOKASTRING=1
       ;;
       ?*) echo "ERROR: Unknown option '$1'."
           usage
@@ -163,6 +172,16 @@ strip_newlines() {
     fi
   done
   :
+}
+
+cook_a_string() {
+    ### Escape backslashes, double-quotes and newlines, in this order
+    grep '' | sed -e 's,\\,\\\\,g' -e 's,\",\\",g' | \
+    { FIRST=''; while IFS="" read -r ILINE; do
+      printf '%s%s' "$FIRST" "$ILINE"
+      [ -z "$FIRST" ] && FIRST='\n'
+      done; }
+    :
 }
 
 tokenize () {
@@ -346,5 +365,9 @@ smart_parse() {
 if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
 then
   parse_options "$@"
-  smart_parse
+  if [ "$COOKASTRING" -eq 1 ]; then
+    cook_a_string
+  else
+    smart_parse
+  fi
 fi
