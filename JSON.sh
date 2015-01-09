@@ -131,6 +131,8 @@ parse_options() {
       -x) EXTRACT_JPATH="$2"
           shift
       ;;
+      -x=*) EXTRACT_JPATH="`echo "$1" | sed 's,^-x=,,'`"
+      ;;
       --no-newline)
           TOXIC_NEWLINE=1
       ;;
