@@ -5,7 +5,7 @@ key":"value","var0":"escaped \" quote","splitValue":"there
 ,"escaping\"several\"\"
 quote\"s and
 newlines"],"aNumber":1,"var8":"string\nwith\nproper\\\nnewlines",
-"var38":"","emptyarr":[],"emptyobj":{},"smptystr":"",
+"var38":"","emptyarr":[],"emptyobj":{},"emptystr":"",
 "arrOfObjs":[{"var":"val1","str":"s"},{"var":"val30","str":"s"},
   {"var":"val2","str":"z"},{"var":"val2","str":"x"},
   {"var":"val1","str":"S"},{"var":"val1","str":"\""},
