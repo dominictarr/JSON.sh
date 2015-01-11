@@ -35,7 +35,7 @@ usage() {
   echo "-x 'regex' - rather than showing all document from the root element,"
   echo "     extract the items rooted at path(s) matching the regex (see the"
   echo "     comma-separated list of nested hierarchy names in general output,"
-  echo "     brackets not included) e.g. regex='^\"level1\",\"level2arr\",0'"
+  echo "     brackets not included) e.g. regex='^\"level1obj\",\"level2arr\",0'"
   echo "--no-newline - rather than concatenating detected line breaks in markup,"
   echo "     return with error when this is seen in input"
   echo "-d - Enable debugging traces to stderr (repeat or use -d=NUM to bump)"

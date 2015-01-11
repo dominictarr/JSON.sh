@@ -78,7 +78,7 @@ Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]
 > "Extract" - rather than showing all document from the root element,
 extract the items rooted at path(s) matching the regex (see the
 comma-separated list of nested hierarchy names in general output,
-brackets not included) e.g. `-x='^"level1","level2arr",0'`
+brackets not included) e.g. `-x='^"level1obj","level2arr",0'`
 
 Sorting is also available, although limited to single-line strings in
 the markup (multilines are automatically escaped into backslash+n):
@@ -128,7 +128,6 @@ Usage: COOKEDSTRING="`somecommand 2>&1 | ./JSON.sh -Q`"
 > To help JSON-related scripting, with `-Q` an input plaintext can be "cooked"
 into a string valid for JSON (backslashes, quotes and newlines escaped, with
 no trailing newline); after cooking, the script exits.
-
 This mode can also be used to pack JSON into JSON.
 
 
