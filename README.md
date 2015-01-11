@@ -60,7 +60,7 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 
 ## Options
 
-### Usual queries, full and filtered
+### Usual queries, full or filtered
 ``` bash
 Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]
 ```
@@ -119,11 +119,11 @@ contents sorted like for `-S='args'`, e.g. use `-N='-n'`.
 This is equivalent to `-N -S='args'`, just more compact to write.
 
 ### Cook raw data
-
 ``` bash
 Usage: COOKEDSTRING="`somecommand 2>&1 | ./JSON.sh -Q`"
 ```
 
+Cooking:
 * `-Q`
 > To help JSON-related scripting, with `-Q` an input plaintext can be "cooked"
 into a string valid for JSON (backslashes, quotes and newlines escaped, with
@@ -136,6 +136,7 @@ This mode can also be used to pack JSON into JSON.
 Usage: JSON.sh [-h]
 ```
 
+Helping:
 * `-h`
 > Show help text.
 
