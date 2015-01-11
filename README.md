@@ -65,38 +65,42 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]
 ```
 
-* -b
+* `-b`
 > Brief output. Combines 'Leaf only' and 'Prune empty' options.
 
-* -l
+* `-l`
 > Leaf only. Only show leaf nodes, which stops data duplication.
 
-* -p
+* `-p`
 > Prune empty. Exclude fields with empty values (strings, arrays, objects).
 
-* -x 'regex'
-* -x='regex'
+* `-x 'regex'` or `-x='regex'`
 > "Extract" - rather than showing all document from the root element,
 extract the items rooted at path(s) matching the regex (see the
 comma-separated list of nested hierarchy names in general output,
 brackets not included) e.g. `-x='^"level1","level2arr",0'`
 
-* --no-newline
-> rather than concatenating detected line breaks in markup, return
-with error when this is seen in input
-
 Sorting is also available, although limited to single-line strings in
 the markup (multilines are automatically escaped into backslash+n):
-* -S
+
+* `-S`
 > Sort the contents of items in JSON markup and leaf-list markup:
 `sort` objects by key names and then values, and arrays by values
 
-> -S='args'
-> use `sort $args` for content sorting, e.g. use `-S='-n -r'` for
+* `-S='args'`
+> Use `sort $args` for content sorting, e.g. use `-S='-n -r'` for
 reverse numeric sort
 
-* -d
-> Enable debugging traces to stderr (repeat or use `-d=NUM` to bump)
+Other options:
+
+* `--no-newline`
+> rather than concatenating detected line breaks in markup, return
+with error when this is seen in input
+
+* `-d [-d...]` or `-d=NUM`
+> Enable debugging traces to `stderr` (repeat or use `-d=NUM` to bump,
+see the script source for details on what can be debugged and how to
+select what you want)
 
 
 ### Normalization (with optional sorting)
@@ -105,11 +109,11 @@ Usage: JSON.sh [-N|-N='args'] [-d] < markup.json
 ```
 
 An input JSON markup can be normalized into single-line no-whitespace:
-* -N
+* `-N`
 > Normalize the input JSON markup into a single-line JSON output;
 in this mode syntax and spacing are normalized, data order remains
 
-* -N='args'
+* `-N='args'`
 > Normalize the input JSON markup into a single-line JSON output with
 contents sorted like for `-S='args'`, e.g. use `-N='-n'`.
 This is equivalent to `-N -S='args'`, just more compact to write.
@@ -117,14 +121,15 @@ This is equivalent to `-N -S='args'`, just more compact to write.
 ### Cook raw data
 
 ``` bash
-Usage: COOKEDSTRING="`somecommand 2>&1 | JSON.sh -Q`"
+Usage: COOKEDSTRING="`somecommand 2>&1 | ./JSON.sh -Q`"
 ```
 
-To help JSON-related scripting, with `-Q` an input plaintext can be "cooked"
+* `-Q`
+> To help JSON-related scripting, with `-Q` an input plaintext can be "cooked"
 into a string valid for JSON (backslashes, quotes and newlines escaped, with
 no trailing newline); after cooking, the script exits.
 
-This mode can also be used to pack JSON in JSON.
+This mode can also be used to pack JSON into JSON.
 
 
 ### Ask for help
@@ -132,7 +137,7 @@ This mode can also be used to pack JSON in JSON.
 Usage: JSON.sh [-h]
 ```
 
--h
+* `-h`
 > Show help text.
 
 
