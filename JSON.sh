@@ -12,15 +12,12 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
-SORTDATA=""
+SORTDATA_OBJ=""
+SORTDATA_ARR=""
 NORMALIZE=0
 EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 COOKASTRING=0
-
-### Beside command-line, debugging can be enabled by envvars from the caller
-[ x"$DEBUG" = xy -o x"$DEBUG" = xyes ] && DEBUG=1
-[ -n "$DEBUG" -a "$DEBUG" -ge 0 ] 2>/dev/null || DEBUG=0
 
 usage() {
   echo
@@ -46,6 +43,8 @@ usage() {
   echo "     'sort' objects by key names and then values, and arrays by values"
   echo "-S='args' - use 'sort \$args' for content sorting, e.g. use -S='-n -r'"
   echo "     for reverse numeric sort"
+  echo "-So|-So='args' - enable sorting (with given arguments) only for objects"
+  echo "-Sa|-Sa='args' - enable sorting (with given arguments) only for arrays"
   echo
   echo "An input JSON markup can be normalized into single-line no-whitespace:"
   echo "-N - Normalize the input JSON markup into a single-line JSON output;"
@@ -53,6 +52,8 @@ usage() {
   echo "-N='args' - Normalize the input JSON markup into a single-line JSON"
   echo "     output with contents sorted like for -S='args', e.g. use -N='-n'"
   echo "     This is equivalent to -N -S='args', just more compact to write"
+  echo "-No='args' - enable sorting (with given arguments) only for objects"
+  echo "-Na='args' - enable sorting (with given arguments) only for arrays"
   echo
   echo "To help JSON-related scripting, with '-Q' an input plaintext can be cooked"
   echo "into a string valid for JSON (backslashes, quotes and newlines escaped,"
@@ -60,6 +61,12 @@ usage() {
   echo '       COOKEDSTRING="`somecommand 2>&1 | JSON.sh -Q`"'
   echo "This can also be used to pack JSON in JSON."
   echo
+}
+
+validate_debuglevel() {
+    ### Beside command-line, debugging can be enabled by envvars from the caller
+    [ x"$DEBUG" = xy -o x"$DEBUG" = xyes ] && DEBUG=1
+    [ -n "$DEBUG" -a "$DEBUG" -ge 0 ] 2>/dev/null || DEBUG=0
 }
 
 unquote() {
@@ -121,12 +128,32 @@ parse_options() {
       ;;
       -N) NORMALIZE=1
       ;;
-      -N=*) SORTDATA="sort `echo "$1" | sed 's,^-N=,,' | unquote `"
-          NORMALIZE=1
+      -N=*) NORMALIZE=1
+          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-N=,,' | unquote `"
+          SORTDATA_ARR="sort `echo "$1" | sed 's,^-N=,,' | unquote `"
       ;;
-      -S) SORTDATA="sort"
+      -No=*) NORMALIZE=1
+          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-No=,,' | unquote `"
       ;;
-      -S=*) SORTDATA="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
+      -Na=*) NORMALIZE=1
+          SORTDATA_ARR="sort `echo "$1" | sed 's,^-Na=,,' | unquote `"
+      ;;
+      -S) SORTDATA_OBJ="sort"
+          SORTDATA_ARR="sort"
+      ;;
+      -So) SORTDATA_OBJ="sort"
+      ;;
+      -Sa) SORTDATA_ARR="sort"
+      ;;
+      -S=*)
+          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
+          SORTDATA_ARR="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
+      ;;
+      -So=*)
+          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-So=,,' | unquote `"
+      ;;
+      -Sa=*)
+          SORTDATA_ARR="sort `echo "$1" | sed 's,^-Sa=,,' | unquote `"
       ;;
       -x) EXTRACT_JPATH="$2"
           shift
@@ -150,6 +177,8 @@ parse_options() {
     shift 1
     ARGN=$((ARGN-1))
   done
+
+  validate_debuglevel
 
   # For normalized data, we do the whole job and just return the top object
   [ "$NORMALIZE" -eq 1 ] && BRIEF=0 && LEAFONLY=0 && PRUNE=0
@@ -277,7 +306,7 @@ parse_array () {
         parse_value "$1" "$index"
         index=$((index+1))
         ary="$ary""$value"
-        if [ -n "$SORTDATA" ]; then
+        if [ -n "$SORTDATA_ARR" ]; then
             [ -z "$aryml" ] && aryml="$value" || aryml="$aryml
 $value"
         fi
@@ -293,8 +322,8 @@ $value"
       done
       ;;
   esac
-  if [ -n "$SORTDATA" ]; then
-    ary="`echo -E "$aryml" | $SORTDATA | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
+  if [ -n "$SORTDATA_ARR" ]; then
+    ary="`echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
   fi
   [ "$BRIEF" -eq 0 ] && value=`printf '[%s]' "$ary"` || value=
   :
@@ -325,7 +354,7 @@ parse_object () {
         print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(3):" "token=$token"
         parse_value "$1" "$key"
         obj="$obj$key:$value"
-        if [ -n "$SORTDATA" ]; then
+        if [ -n "$SORTDATA_OBJ" ]; then
             [ -z "$objml" ] && objml="$key:$value" || objml="$objml
 $key:$value"
         fi
@@ -341,8 +370,8 @@ $key:$value"
       done
     ;;
   esac
-  if [ -n "$SORTDATA" ]; then
-    obj="`echo -E "$objml" | $SORTDATA | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
+  if [ -n "$SORTDATA_OBJ" ]; then
+    obj="`echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
   fi
   [ "$BRIEF" -eq 0 ] && value=`printf '{%s}' "$obj"` || value=
   :
@@ -416,7 +445,8 @@ parse () {
 
 smart_parse() {
   strip_newlines | \
-  tokenize | if [ -n "$SORTDATA" ] ; then
+  tokenize | if [ -n "$SORTDATA_OBJ$SORTDATA_ARR" ] ; then
+      ### Any type of sort was enabled
       ( NORMALIZE=1 LEAFONLY=0 BRIEF=0 parse ) \
       | tokenize | parse
     else
@@ -428,6 +458,7 @@ smart_parse() {
 ### Active logic
 
 ### Caller can disable specific debuggers by setting their level too high
+validate_debuglevel
 default_posval DEBUGLEVEL_PRINTPATHVAL		1
 default_posval DEBUGLEVEL_PRINTTOKEN		2
 default_posval DEBUGLEVEL_PRINTTOKEN_PIPELINE	3

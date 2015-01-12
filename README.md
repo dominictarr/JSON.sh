@@ -91,6 +91,14 @@ the markup (multilines are automatically escaped into backslash+n):
 > Use `sort $args` for content sorting, e.g. use `-S='-n -r'` for
 reverse numeric sort
 
+* `-So='args'` and/or `-Sa='args'`, or `-So` or `-Sa`
+> Only enable `sort` and set the arguments for either objects (`-So`)
+or arrays/tuples (`-Sa`). This way sorting of tuples can be avoided
+to keep data in valid order (as defined by the programmatic users of
+the markup) and/or different rules can be used for arrays vs. objects.
+Essentially, the singular `-S{='args'}` option just enables both the
+`-Sa` and `-So` options with the same values.
+
 Other options:
 
 * `--no-newline`
@@ -118,6 +126,12 @@ in this mode syntax and spacing are normalized, data order remains
 contents sorted like for `-S='args'`, e.g. use `-N='-n'`.
 This is equivalent to `-N -S='args'`, just more compact to write.
 
+* `-No='args'` and/or `-Na='args'`
+> Normalize with sorting like above, but only enable and set the `sort`
+arguments for either objects (`-No`) or arrays/tuples (`-Na`). This way
+sorting of tuples can be avoided to keep data in valid order (as defined
+by the programmatic users of the markup).
+
 ### Cook raw data
 ``` bash
 Usage: COOKEDSTRING="`somecommand 2>&1 | ./JSON.sh -Q`"
@@ -125,11 +139,10 @@ Usage: COOKEDSTRING="`somecommand 2>&1 | ./JSON.sh -Q`"
 
 Cooking:
 * `-Q`
-> To help JSON-related scripting, with `-Q` an input plaintext can be "cooked"
-into a string valid for JSON (backslashes, quotes and newlines escaped, with
-no trailing newline); after cooking, the script exits.
+> To help JSON-related scripting, a block of input plaintext can be
+"cooked" into a string valid for JSON (backslashes, quotes and newlines
+escaped, with no trailing newline); after cooking, the script exits.
 This mode can also be used to pack JSON into JSON.
-
 
 ### Ask for help
 ``` bash
@@ -139,7 +152,6 @@ Usage: JSON.sh [-h]
 Helping:
 * `-h`
 > Show help text.
-
 
 ## Complex usage examples
 
@@ -363,8 +375,9 @@ standalone number tokens) and reversed (`a` is after `z`) sorting:
 * Normalized output can also be sorted, upon request - although *NOTE* that if
 your document schema has arrays whose order of items has syntactic meaning for
 your application (aka "tuples"), such ordering will likely make the document
-invalid for your application's use-case; this warning *should* be irrelevant
-for objects (`key:value` pairs) though:
+invalid for your application's use-case - and in such case you might want to
+use `-No{='args'}` to only sort objects; this warning *should* be irrelevant
+for objects (the `{"key":value}` pairs) though:
 ```bash
 :; echo -E "$LINE" | ./JSON.sh -N='-n'
 {"aNumber":1,"arrOfObjs":[{"str":"5","var":"val1"},{"str":"S","var":"val1"},{"str":"\"","var":"val1"},{"str":"s","var":"val1"},{"str":"s","var":"val30"},{"str":"x","var":"val2"},{"str":"z","var":"val2"},{"str":5,"var":"val1"}],"array":["","","\"","a","b","escaping\"several\"\"\nquote\"s and\nnewlines","z",0,3,20],"emptyarr":[],"emptyobj":{},"splitValue":"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")","split\nkey":"value","var0":"escaped \" quote","var1":"val1","var38":"","var8":"string\nwith\nproper\\\nnewlines"}
@@ -374,6 +387,13 @@ for objects (`key:value` pairs) though:
 
 :; echo -E "$LINE" | ./JSON.sh -N="-r -n"
 {"var8":"string\nwith\nproper\\\nnewlines","var38":"","var1":"val1","var0":"escaped \" quote","split\nkey":"value","splitValue":"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")","emptyobj":{},"emptyarr":[],"array":[20,3,0,"z","escaping\"several\"\"\nquote\"s and\nnewlines","b","a","\"","",""],"arrOfObjs":[{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":5},{"var":"val1","str":"s"},{"var":"val1","str":"\""},{"var":"val1","str":"S"},{"var":"val1","str":"5"}],"aNumber":1}
+
+### Normalize sorting only objects (arrays/tuples remain in original order):
+:; echo -E "$LINE" | ./JSON.sh -No='-r -n'
+{"var8":"string\nwith\nproper\\\nnewlines","var38":"","var1":"val1","var0":"escaped \" quote","splitValue":"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")","split\nkey":"value","emptystr":"","emptyobj":{},"emptyarr":[],"arrOfObjs":[{"var":"val1","str":"s"},{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":"S"},{"var":"val1","str":"\""},{"var":"val1","str":5},{"var":"val1","str":"5"}],"array":["z","a","b",3,20,0,"","","\"","escaping\"several\"\"\nquote\"s and\nnewlines"],"aNumber":1}
+
+:; echo -E "$LINE" | ./JSON.sh -No='-n'
+{"aNumber":1,"array":["z","a","b",3,20,0,"","","\"","escaping\"several\"\"\nquote\"s and\nnewlines"],"arrOfObjs":[{"str":"s","var":"val1"},{"str":"s","var":"val30"},{"str":"z","var":"val2"},{"str":"x","var":"val2"},{"str":"S","var":"val1"},{"str":"\"","var":"val1"},{"str":5,"var":"val1"},{"str":"5","var":"val1"}],"emptyarr":[],"emptyobj":{},"emptystr":"","split\nkey":"value","splitValue":"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")","var0":"escaped \" quote","var1":"val1","var38":"","var8":"string\nwith\nproper\\\nnewlines"}
 ```
 
 * And note that the normalized output returns (maybe sorted) JSON markup of
