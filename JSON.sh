@@ -2,6 +2,7 @@
 
 # https://github.com/dominictarr/JSON.sh/blob/master/JSON.sh
 # MIT / Apache 2 licenses (C) 2014 by "dominictarr" checked out 2015-01-04
+# MIT / Apache 2 licenses (C) 2015 by "dominictarr" merged 0.2.0 2015-04-01
 # further development (C) 2015 Jim Klimov <EvgenyKlimov@eaton.com>
 
 throw () {
@@ -12,6 +13,7 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+NORMALIZE_SOLIDUS=0
 SORTDATA_OBJ=""
 SORTDATA_ARR=""
 NORMALIZE=0
@@ -24,15 +26,16 @@ COOKASTRING=0
 
 usage() {
   echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]"
-  echo "       JSON.sh [-N|-N='args'] < markup.json"
-  echo "       JSON.sh [...] [-Nnx|-Nnx='fmtstr'|-Nn|-Nn='fmtstr'] < markup.json"
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-s] [--no-newline] [-d] \ "
+  echo "               [-x 'regex'] [-S|-S='args'] [-N|-N='args'] \ "
+  echo "               [-Nnx|-Nnx='fmtstr'|-Nn|-Nn='fmtstr'] < markup.json"
   echo "       JSON.sh [-h]"
   echo "-h - This help text."
   echo
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo "-s - Remove escaping of the solidus symbol (stright slash)."
   echo "-x 'regex' - rather than showing all document from the root element,"
   echo "     extract the items rooted at path(s) matching the regex (see the"
   echo "     comma-separated list of nested hierarchy names in general output,"
@@ -134,6 +137,8 @@ parse_options() {
       -l) LEAFONLY=1
       ;;
       -p) PRUNE=1
+      ;;
+      -s) NORMALIZE_SOLIDUS=1
       ;;
       -N) NORMALIZE=1
       ;;
@@ -430,11 +435,14 @@ parse_value () {
        else
         # Not a number or no normalization - process like default
             value=$token
+            [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=${value//\\\//\/}
        fi
        isleaf=1
        [ "$value" = '""' -o "$value" = '' ] && isempty=1
        ;;
     *) value=$token
+       # if asked, replace solidus ("\/") in json strings with normalized value: "/"
+       [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=${value//\\\//\/}
        isleaf=1
        [ "$value" = '""' ] && isempty=1
        ;;

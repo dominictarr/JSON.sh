@@ -74,6 +74,9 @@ Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]
 * `-p`
 > Prune empty. Exclude fields with empty values (strings, arrays, objects).
 
+* `-s`
+> Remove escaping of the solidus symbol (stright slash).
+
 * `-x 'regex'` or `-x='regex'`
 > "Extract" - rather than showing all document from the root element,
 extract the items rooted at path(s) matching the regex (see the
