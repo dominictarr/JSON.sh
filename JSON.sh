@@ -15,6 +15,9 @@ PRUNE=0
 SORTDATA_OBJ=""
 SORTDATA_ARR=""
 NORMALIZE=0
+NORMALIZE_NUMBERS=0
+NORMALIZE_NUMBERS_FORMAT='%.6f'
+NORMALIZE_NUMBERS_STRIP=0
 EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 COOKASTRING=0
@@ -23,6 +26,7 @@ usage() {
   echo
   echo "Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]"
   echo "       JSON.sh [-N|-N='args'] < markup.json"
+  echo "       JSON.sh [...] [-Nnx|-Nnx='fmtstr'|-Nn|-Nn='fmtstr'] < markup.json"
   echo "       JSON.sh [-h]"
   echo "-h - This help text."
   echo
@@ -54,6 +58,11 @@ usage() {
   echo "     This is equivalent to -N -S='args', just more compact to write"
   echo "-No='args' - enable sorting (with given arguments) only for objects"
   echo "-Na='args' - enable sorting (with given arguments) only for arrays"
+  echo
+  echo "Numeric values can be normalized (e.g. convert engineering into layman)"
+  echo "-Nn='fmtstr' - printf the detected numeric values with the fmtstr conversion"
+  echo "-Nn  - assume 'fmtstr'='%.6f' (with 6 precision digits after period)"
+  echo "-Nnx - -Nn + strip trailing zeroes and trailing period (for whole numbers)"
   echo
   echo "To help JSON-related scripting, with '-Q' an input plaintext can be cooked"
   echo "into a string valid for JSON (backslashes, quotes and newlines escaped,"
@@ -137,6 +146,18 @@ parse_options() {
       ;;
       -Na=*) NORMALIZE=1
           SORTDATA_ARR="sort `echo "$1" | sed 's,^-Na=,,' | unquote `"
+      ;;
+      -Nnx) NORMALIZE_NUMBERS_STRIP=1
+            NORMALIZE_NUMBERS=1
+      ;;
+      -Nnx=*) NORMALIZE_NUMBERS_STRIP=1
+            NORMALIZE_NUMBERS=1
+            NORMALIZE_NUMBERS_FORMAT="`echo "$1" | sed 's,^-Nnx=,,' | unquote `"
+      ;;
+      -Nn) NORMALIZE_NUMBERS=1
+      ;;
+      -Nn=*) NORMALIZE_NUMBERS=1
+          NORMALIZE_NUMBERS_FORMAT="`echo "$1" | sed 's,^-Nn=,,' | unquote `"
       ;;
       -S) SORTDATA_OBJ="sort"
           SORTDATA_ARR="sort"
@@ -377,6 +398,7 @@ $key:$value"
   :
 }
 
+REGEX_NUMBER='^-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?$'
 parse_value () {
   local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
@@ -388,6 +410,30 @@ parse_value () {
        ;;
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
+    -*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
+       print_debug $DEBUGLEVEL_PRINTPATHVAL \
+            "token '$token' is a suspected number" >&2
+       if [ "$NORMALIZE_NUMBERS" = 1 ] && \
+         [[ "$token" =~ ${REGEX_NUMBER} ]] \
+       ; then
+            value="`printf "$NORMALIZE_NUMBERS_FORMAT" "$token"`" || \
+            value=$token
+            print_debug $DEBUGLEVEL_PRINTPATHVAL "normalized numeric token" \
+                "'$token' into '$value'" >&2
+            if [ "$NORMALIZE_NUMBERS_STRIP" = 1 ]; then
+                local valuetmp="`echo "$value" | sed -e 's,0*$,,g' -e 's,\.$,,'`" && \
+                value="$valuetmp"
+                unset valuetmp
+                print_debug $DEBUGLEVEL_PRINTPATHVAL "stripped numeric token" \
+                    "'$token' into '$value'" >&2
+            fi
+       else
+        # Not a number or no normalization - process like default
+            value=$token
+       fi
+       isleaf=1
+       [ "$value" = '""' -o "$value" = '' ] && isempty=1
+       ;;
     *) value=$token
        isleaf=1
        [ "$value" = '""' ] && isempty=1
