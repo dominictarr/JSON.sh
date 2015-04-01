@@ -304,7 +304,7 @@ tokenize () {
   local CHART="($CHAR|[[:blank:]])"
   local STRINGVAL="$CHART*($ESCAPE$CHART*)*"
   local STRING="(\"$STRINGVAL\")"
-  local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
+  local NUMBER='[+-]?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
@@ -398,7 +398,7 @@ $key:$value"
   :
 }
 
-REGEX_NUMBER='^-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?$'
+REGEX_NUMBER='^[+-]?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?$'
 parse_value () {
   local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
@@ -410,7 +410,7 @@ parse_value () {
        ;;
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
-    -*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
+    +*|-*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "token '$token' is a suspected number" >&2
        if [ "$NORMALIZE_NUMBERS" = 1 ] && \
