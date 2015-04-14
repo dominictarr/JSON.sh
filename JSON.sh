@@ -13,6 +13,7 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+ALLOWEMPTYINPUT=1
 NORMALIZE_SOLIDUS=0
 SORTDATA_OBJ=""
 SORTDATA_ARR=""
@@ -26,13 +27,14 @@ COOKASTRING=0
 
 usage() {
   echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-s] [--no-newline] [-d] \ "
+  echo "Usage: JSON.sh [-b] [-l] [-p] [ -P] [-s] [--no-newline] [-d] \ "
   echo "               [-x 'regex'] [-S|-S='args'] [-N|-N='args'] \ "
   echo "               [-Nnx|-Nnx='fmtstr'|-Nn|-Nn='fmtstr'] < markup.json"
   echo "       JSON.sh [-h]"
   echo "-h - This help text."
   echo
   echo "-p - Prune empty. Exclude fields with empty values."
+  echo "-P - Pedantic mode, forbids acception of empty input documents."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
   echo "-s - Remove escaping of the solidus symbol (stright slash)."
@@ -137,6 +139,8 @@ parse_options() {
       -l) LEAFONLY=1
       ;;
       -p) PRUNE=1
+      ;;
+      -P) ALLOWEMPTYINPUT=0
       ;;
       -s) NORMALIZE_SOLIDUS=1
       ;;
@@ -414,7 +418,13 @@ parse_value () {
        [ "$value" = '[]' ] && isempty=1
        ;;
     # At this point, the only valid single-character tokens are digits.
-    ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
+    ''|[!0-9]) if [ -z "$token" -a -z "$jpath" ] && [ "$ALLOWEMPTYINPUT" = 1 ]; then
+            print_debug $DEBUGLEVEL_PRINTPATHVAL \
+                'Got a NULL document as input (no jpath, no token)' >&2
+            value='{}'
+        else
+            throw "EXPECTED value GOT ${token:-EOF}"
+        fi ;;
     +*|-*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "token '$token' is a suspected number" >&2
