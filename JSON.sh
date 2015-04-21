@@ -418,7 +418,7 @@ parse_value () {
        [ "$value" = '[]' ] && isempty=1
        ;;
     # At this point, the only valid single-character tokens are digits.
-    ''|[!0-9]) if [ -z "$token" -a -z "$jpath" ] && [ "$ALLOWEMPTYINPUT" = 1 ]; then
+    ''|[!0-9]) if [ "$ALLOWEMPTYINPUT" = 1 -a -z "$jpath" ] && [ -z "$token" ]; then
             print_debug $DEBUGLEVEL_PRINTPATHVAL \
                 'Got a NULL document as input (no jpath, no token)' >&2
             value='{}'
