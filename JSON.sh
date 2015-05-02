@@ -25,7 +25,7 @@ usage() {
 parse_options() {
   set -- "$@"
   local ARGN=$#
-  while [ $ARGN -ne 0 ]
+  while [ "$ARGN" -ne 0 ]
   do
     case $1 in
       -h) usage
@@ -61,7 +61,7 @@ awk_egrep () {
       print token;
       $0=substr($0, start+RLENGTH);
     }
-  }' pattern=$pattern_string
+  }' pattern="$pattern_string"
 }
 
 tokenize () {
@@ -116,7 +116,7 @@ parse_array () {
       done
       ;;
   esac
-  [ "$BRIEF" -eq 0 ] && value=`printf '[%s]' "$ary"` || value=
+  [ "$BRIEF" -eq 0 ] && value=$(printf '[%s]' "$ary") || value=
   :
 }
 
@@ -151,7 +151,7 @@ parse_object () {
       done
     ;;
   esac
-  [ "$BRIEF" -eq 0 ] && value=`printf '{%s}' "$obj"` || value=
+  [ "$BRIEF" -eq 0 ] && value=$(printf '{%s}' "$obj") || value=
   :
 }
 
