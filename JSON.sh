@@ -4,6 +4,7 @@
 # MIT / Apache 2 licenses (C) 2014 by "dominictarr" checked out 2015-01-04
 # MIT / Apache 2 licenses (C) 2015 by "dominictarr" merged 0.2.0 2015-04-01
 # further development (C) 2015 Jim Klimov <EvgenyKlimov@eaton.com>
+# at fork https://github.com/jimklimov/JSON.sh
 
 throw () {
   echo "$*" >&2
