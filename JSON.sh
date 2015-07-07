@@ -328,7 +328,7 @@ parse_array () {
   local ary=''
   local aryml=''
   read -r token
-  print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(1):" "token=$token"
+  print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(1):" "token='$token'"
   case "$token" in
     ']') ;;
     *)
@@ -342,14 +342,14 @@ parse_array () {
 $value"
         fi
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(2):" "token=$token"
+        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(2):" "token='$token'"
         case "$token" in
           ']') break ;;
           ',') ary="$ary," ;;
-          *) throw "EXPECTED , or ] GOT ${token:-EOF}" ;;
+          *) throw "EXPECTED ',' or ']' GOT '${token:-EOF}'" ;;
         esac
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(3):" "token=$token"
+        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(3):" "token='$token'"
       done
       ;;
   esac
@@ -365,7 +365,7 @@ parse_object () {
   local obj=''
   local objml=''
   read -r token
-  print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(1):" "token=$token"
+  print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(1):" "token='$token'"
   case "$token" in
     '}') ;;
     *)
@@ -373,16 +373,16 @@ parse_object () {
       do
         case "$token" in
           '"'*'"') key=$token ;;
-          *) throw "EXPECTED string GOT ${token:-EOF}" ;;
+          *) throw "EXPECTED string GOT '${token:-EOF}'" ;;
         esac
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(2):" "token=$token"
+        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(2):" "token='$token'"
         case "$token" in
           ':') ;;
-          *) throw "EXPECTED : GOT ${token:-EOF}" ;;
+          *) throw "EXPECTED : GOT '${token:-EOF}'" ;;
         esac
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(3):" "token=$token"
+        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(3):" "token='$token'"
         parse_value "$1" "$key"
         obj="$obj$key:$value"
         if [ -n "$SORTDATA_OBJ" ]; then
@@ -390,14 +390,14 @@ parse_object () {
 $key:$value"
         fi
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(4):" "token=$token"
+        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(4):" "token='$token'"
         case "$token" in
           '}') break ;;
           ',') obj="$obj," ;;
-          *) throw "EXPECTED , or } GOT ${token:-EOF}" ;;
+          *) throw "EXPECTED ',' or '}' GOT '${token:-EOF}'" ;;
         esac
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(5):" "token=$token"
+        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(5):" "token='$token'"
       done
     ;;
   esac
@@ -424,7 +424,7 @@ parse_value () {
                 'Got a NULL document as input (no jpath, no token)' >&2
             value='{}'
         else
-            throw "EXPECTED value GOT ${token:-EOF}"
+            throw "EXPECTED value GOT '${token:-EOF}'"
         fi ;;
     +*|-*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
@@ -498,13 +498,13 @@ parse_value () {
 
 parse () {
   read -r token
-  print_debug $DEBUGLEVEL_PRINTTOKEN "parse(1):" "token=$token"
+  print_debug $DEBUGLEVEL_PRINTTOKEN "parse(1):" "token='$token'"
   parse_value
   read -r token
-  print_debug $DEBUGLEVEL_PRINTTOKEN "parse(2):" "token=$token"
+  print_debug $DEBUGLEVEL_PRINTTOKEN "parse(2):" "token='$token'"
   case "$token" in
     '') ;;
-    *) throw "EXPECTED EOF GOT $token" ;;
+    *) throw "EXPECTED EOF GOT '$token'" ;;
   esac
 }
 
