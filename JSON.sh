@@ -29,21 +29,21 @@ COOKASTRING=0
 # May be passed by caller; also may pass AWK_OPTS *for it* then
 [ -z "$AWK" ] && AWK_OPTS="" && \
 for P in gawk /usr/xpg4/bin/awk nawk oawk awk ; do case "$P" in
-    /*) [ -x "$P" ] && AWK="$P"; break;;
+    /*) [ -x "$P" ] && AWK="$P" && break;;
     *) AWK="`which "$P" 2>/dev/null`" && [ -n "$AWK" ] && break;;
 esac; done
 
 # Different OSes have different greps... we like a GNU one
 [ -z "$GGREP" ] && \
 for P in ggrep /usr/xpg4/bin/grep grep ; do case "$P" in
-    /*) [ -x "$P" ] && GGREP="$P"; break;;
+    /*) [ -x "$P" ] && GGREP="$P" && break;;
     *) GGREP="`which "$P" 2>/dev/null`" && [ -n "$GGREP" ] && break;;
 esac; done
 [ -n "$GGREP" ] && [ -x "$GGREP" ] || throw "No GNU GREP was found!"
 
 [ -z "$GEGREP" ] && \
 for P in gegrep /usr/xpg4/bin/egrep egrep ; do case "$P" in
-    /*) [ -x "$P" ] && GEGREP="$P"; break;;
+    /*) [ -x "$P" ] && GEGREP="$P" && break;;
     *) GEGREP="`which "$P" 2>/dev/null`" && [ -n "$GEGREP" ] && break;;
 esac; done
 [ -n "$GEGREP" ] && [ -x "$GEGREP" ] || throw "No GNU EGREP was found!"
