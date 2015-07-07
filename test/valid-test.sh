@@ -19,7 +19,7 @@ i=0
 CHOMPEXT='\.\(parsed\|sorted\|numnormalized\|normalized\|json\).*$'
 [ $# -gt 0 ] && \
     FILES="$(for F in "$@"; do echo valid/"`basename "$F" | sed "s,${CHOMPEXT},,"`".json ; done | sort | uniq)" || \
-    FILES="`ls valid/*.json -1`"
+    FILES="`ls -1 valid/*.json`"
 
 [ -z "$FILES" ] && echo "error - no files found to test!" >&2 && exit 1
 
