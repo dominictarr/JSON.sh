@@ -26,27 +26,38 @@ EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 COOKASTRING=0
 
+findbin() {
+    # Locates a named binary or one from path, prints to stdout
+    local BIN
+    for P in "$@" ; do case "$P" in
+	/*) [ -x "$P" ] && BIN="$P" && break;;
+        *) BIN="`which "$P" 2>/dev/null | tail -1`" && [ -n "$BIN" ] && [ -x "$BIN" ] && break || BIN="";;
+    esac; done
+    [ -n "$BIN" ] && [ -x "$BIN" ] && echo "$BIN" && return 0
+    return 1
+}
+
 # May be passed by caller; also may pass AWK_OPTS *for it* then
 [ -z "$AWK" ] && AWK_OPTS="" && \
-for P in gawk /usr/xpg4/bin/awk nawk oawk awk ; do case "$P" in
-    /*) [ -x "$P" ] && AWK="$P" && break;;
-    *) AWK="`which "$P" 2>/dev/null`" && [ -n "$AWK" ] && break;;
-esac; done
+    AWK="`findbin /usr/xpg4/bin/awk gawk nawk oawk awk`"
+# Error-checked in one optional place it may be needed
 
 # Different OSes have different greps... we like a GNU one
 [ -z "$GGREP" ] && \
-for P in ggrep /usr/xpg4/bin/grep grep ; do case "$P" in
-    /*) [ -x "$P" ] && GGREP="$P" && break;;
-    *) GGREP="`which "$P" 2>/dev/null`" && [ -n "$GGREP" ] && break;;
-esac; done
+    GGREP="`findbin ggrep /usr/xpg4/bin/grep grep`"
 [ -n "$GGREP" ] && [ -x "$GGREP" ] || throw "No GNU GREP was found!"
 
 [ -z "$GEGREP" ] && \
-for P in gegrep /usr/xpg4/bin/egrep egrep ; do case "$P" in
-    /*) [ -x "$P" ] && GEGREP="$P" && break;;
-    *) GEGREP="`which "$P" 2>/dev/null`" && [ -n "$GEGREP" ] && break;;
-esac; done
+    GEGREP="`findbin gegrep /usr/xpg4/bin/egrep egrep`"
 [ -n "$GEGREP" ] && [ -x "$GEGREP" ] || throw "No GNU EGREP was found!"
+
+[ -z "$GSORT" ] && \
+    GSORT="`findbin gsort sort /usr/xpg4/bin/sort`"
+[ -n "$GSORT" ] && [ -x "$GSORT" ] || throw "No GNU SORT was found!"
+
+[ -z "$GSED" ] && \
+    GSED="`findbin /usr/xpg4/bin/sed gsed sed`"
+[ -n "$GSED" ] && [ -x "$GSED" ] || throw "No GNU SED was found!"
 
 usage() {
   echo
@@ -108,7 +119,8 @@ validate_debuglevel() {
 
 unquote() {
     # Remove single or double quotes surrounding the token
-    sed "s,^'\(.*\)'\$,\1," | sed 's,^\"\(.*\)\"$,\1,'
+    $GSED "s,^'\(.*\)'\$,\1," 2>/dev/null | \
+    $GSED 's,^\"\(.*\)\"$,\1,' 2>/dev/null
 }
 
 ### Empty and non-numeric and non-positive values should be filtered out here
@@ -170,55 +182,55 @@ parse_options() {
       -N) NORMALIZE=1
       ;;
       -N=*) NORMALIZE=1
-          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-N=,,' | unquote `"
-          SORTDATA_ARR="sort `echo "$1" | sed 's,^-N=,,' | unquote `"
+          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-N=,,' 2>/dev/null | unquote `"
+          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-N=,,' 2>/dev/null | unquote `"
       ;;
       -No=*) NORMALIZE=1
-          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-No=,,' | unquote `"
+          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-No=,,' 2>/dev/null | unquote `"
       ;;
       -Na=*) NORMALIZE=1
-          SORTDATA_ARR="sort `echo "$1" | sed 's,^-Na=,,' | unquote `"
+          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-Na=,,' 2>/dev/null | unquote `"
       ;;
       -Nnx) NORMALIZE_NUMBERS_STRIP=1
             NORMALIZE_NUMBERS=1
       ;;
       -Nnx=*) NORMALIZE_NUMBERS_STRIP=1
             NORMALIZE_NUMBERS=1
-            NORMALIZE_NUMBERS_FORMAT="`echo "$1" | sed 's,^-Nnx=,,' | unquote `"
+            NORMALIZE_NUMBERS_FORMAT="`echo "$1" | $GSED 's,^-Nnx=,,' 2>/dev/null | unquote `"
       ;;
       -Nn) NORMALIZE_NUMBERS=1
       ;;
       -Nn=*) NORMALIZE_NUMBERS=1
-          NORMALIZE_NUMBERS_FORMAT="`echo "$1" | sed 's,^-Nn=,,' | unquote `"
+          NORMALIZE_NUMBERS_FORMAT="`echo "$1" | $GSED 's,^-Nn=,,' 2>/dev/null | unquote `"
       ;;
-      -S) SORTDATA_OBJ="sort"
-          SORTDATA_ARR="sort"
+      -S) SORTDATA_OBJ="$GSORT"
+          SORTDATA_ARR="$GSORT"
       ;;
-      -So) SORTDATA_OBJ="sort"
+      -So) SORTDATA_OBJ="$GSORT"
       ;;
-      -Sa) SORTDATA_ARR="sort"
+      -Sa) SORTDATA_ARR="$GSORT"
       ;;
       -S=*)
-          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
-          SORTDATA_ARR="sort `echo "$1" | sed 's,^-S=,,' | unquote `"
+          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-S=,,' 2>/dev/null | unquote `"
+          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-S=,,' 2>/dev/null | unquote `"
       ;;
       -So=*)
-          SORTDATA_OBJ="sort `echo "$1" | sed 's,^-So=,,' | unquote `"
+          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-So=,,' 2>/dev/null | unquote `"
       ;;
       -Sa=*)
-          SORTDATA_ARR="sort `echo "$1" | sed 's,^-Sa=,,' | unquote `"
+          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-Sa=,,' 2>/dev/null | unquote `"
       ;;
       -x) EXTRACT_JPATH="$2"
           shift
       ;;
-      -x=*) EXTRACT_JPATH="`echo "$1" | sed 's,^-x=,,'`"
+      -x=*) EXTRACT_JPATH="`echo "$1" | $GSED 's,^-x=,,' 2>/dev/null`"
       ;;
       --no-newline)
           TOXIC_NEWLINE=1
       ;;
       -d) DEBUG=$(($DEBUG+1))
       ;;
-      -d=*) DEBUG="`echo "$1" | sed 's,^-d=,,'`"
+      -d=*) DEBUG="`echo "$1" | $GSED 's,^-d=,,' 2>/dev/null`"
       ;;
       -Q) COOKASTRING=1
       ;;
@@ -305,7 +317,7 @@ strip_newlines() {
 
 cook_a_string() {
     ### Escape backslashes, double-quotes, tabs and newlines, in this order
-    $GGREP '' | sed -e 's,\\,\\\\,g' -e 's,\",\\",g' -e 's,\t,\\t,g' | \
+    $GGREP '' | $GSED -e 's,\\,\\\\,g' -e 's,\",\\",g' -e 's,\t,\\t,g' 2>/dev/null | \
     { FIRST=''; while IFS="" read -r ILINE; do
       printf '%s%s' "$FIRST" "$ILINE"
       [ -z "$FIRST" ] && FIRST='\n'
@@ -383,7 +395,7 @@ $value"
       ;;
   esac
   if [ -n "$SORTDATA_ARR" ]; then
-    ary="`echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
+    ary="`echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null`"
   fi
   [ "$BRIEF" -eq 0 ] && value=`printf '[%s]' "$ary"` || value=
   :
@@ -431,7 +443,7 @@ $key:$value"
     ;;
   esac
   if [ -n "$SORTDATA_OBJ" ]; then
-    obj="`echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | sed 's|,*$||' | sed 's|^,*||'`"
+    obj="`echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null`"
   fi
   [ "$BRIEF" -eq 0 ] && value=`printf '{%s}' "$obj"` || value=
   :
@@ -466,7 +478,7 @@ parse_value () {
             print_debug $DEBUGLEVEL_PRINTPATHVAL "normalized numeric token" \
                 "'$token' into '$value'" >&2
             if [ "$NORMALIZE_NUMBERS_STRIP" = 1 ]; then
-                local valuetmp="`echo "$value" | sed -e 's,0*$,,g' -e 's,\.$,,'`" && \
+                local valuetmp="`echo "$value" | $GSED -e 's,0*$,,g' -e 's,\.$,,' 2>/dev/null`" && \
                 value="$valuetmp"
                 unset valuetmp
                 print_debug $DEBUGLEVEL_PRINTPATHVAL "stripped numeric token" \
