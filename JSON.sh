@@ -26,6 +26,28 @@ EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 COOKASTRING=0
 
+# May be passed by caller; also may pass AWK_OPTS *for it* then
+[ -z "$AWK" ] && AWK_OPTS="" && \
+for P in gawk /usr/xpg4/bin/awk nawk oawk awk ; do case "$P" in
+    /*) [ -x "$P" ] && AWK="$P"; break;;
+    *) AWK="`which "$P" 2>/dev/null`" && [ -n "$AWK" ] && break;;
+esac; done
+
+# Different OSes have different greps... we like a GNU one
+[ -z "$GGREP" ] && \
+for P in ggrep /usr/xpg4/bin/grep grep ; do case "$P" in
+    /*) [ -x "$P" ] && GGREP="$P"; break;;
+    *) GGREP="`which "$P" 2>/dev/null`" && [ -n "$GGREP" ] && break;;
+esac; done
+[ -n "$GGREP" ] && [ -x "$GGREP" ] || throw "No GNU GREP was found!"
+
+[ -z "$GEGREP" ] && \
+for P in gegrep /usr/xpg4/bin/egrep egrep ; do case "$P" in
+    /*) [ -x "$P" ] && GEGREP="$P"; break;;
+    *) GEGREP="`which "$P" 2>/dev/null`" && [ -n "$GEGREP" ] && break;;
+esac; done
+[ -n "$GEGREP" ] && [ -x "$GEGREP" ] || throw "No GNU EGREP was found!"
+
 usage() {
   echo
   echo "Usage: JSON.sh [-b] [-l] [-p] [ -P] [-s] [--no-newline] [-d] \ "
@@ -218,7 +240,10 @@ parse_options() {
 awk_egrep () {
   local pattern_string=$1
 
-  gawk '{
+  [ -z "$AWK" ] && throw "No AWK found!"
+  [ ! -x "$AWK" ] && throw "Not executable AWK='$AWK'!"
+
+  ${AWK} $AWK_OPTS '{
     while ($0) {
       start=match($0, pattern);
       token=substr($0, start, RLENGTH);
@@ -237,8 +262,8 @@ strip_newlines() {
   local INSTRING=0
   local LINENUM=0
 
-  # The first "grep" should ensure that input has a trailing newline
-  grep '' | \
+  # The first "grep" should ensure that input for "while" has a trailing newline
+  $GGREP '' | \
   tee_stderr BEFORE_STRIP $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   while IFS="" read -r ILINE; do
     # Remove escaped quotes:
@@ -280,7 +305,7 @@ strip_newlines() {
 
 cook_a_string() {
     ### Escape backslashes, double-quotes, tabs and newlines, in this order
-    grep '' | sed -e 's,\\,\\\\,g' -e 's,\",\\",g' -e 's,\t,\\t,g' | \
+    $GGREP '' | sed -e 's,\\,\\\\,g' -e 's,\",\\",g' -e 's,\t,\\t,g' | \
     { FIRST=''; while IFS="" read -r ILINE; do
       printf '%s%s' "$FIRST" "$ILINE"
       [ -z "$FIRST" ] && FIRST='\n'
@@ -289,23 +314,27 @@ cook_a_string() {
 }
 
 tokenize () {
-  local GREP
+  local GREP_O
   local ESCAPE
   local CHAR
 
-  if echo "test string" | egrep -ao --color=never "test" &>/dev/null
+  if echo "test string" | $GEGREP -ao --color=never "test" >/dev/null 2>/dev/null
   then
-    GREP='egrep -ao --color=never'
-  else
-    GREP='egrep -ao'
+    GREP_O="$GEGREP -ao --color=never"
+  elif echo "test string" | $GEGREP -ao "test" >/dev/null 2>/dev/null
+  then
+    GREP_O="$GEGREP -ao"
+  elif echo "test string" | $GEGREP -o "test" >/dev/null 2>/dev/null
+  then
+    GREP_O="$GEGREP -o"
   fi
 
-  if echo "test string" | egrep -o "test" &>/dev/null
+  if [ -n "$GREP_O" ] && echo "test string" | $GREP_O "test" >/dev/null
   then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\]'
   else
-    GREP=awk_egrep
+    GREP_O=awk_egrep
     ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\\\]'
   fi
@@ -319,7 +348,7 @@ tokenize () {
   local SPACE='[[:space:]]+'
 
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$" | \
+  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE$" | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
 }
 
