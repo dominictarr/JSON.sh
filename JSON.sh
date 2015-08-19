@@ -1,10 +1,49 @@
 #!/usr/bin/env bash
-
-# https://github.com/dominictarr/JSON.sh/blob/master/JSON.sh
-# MIT / Apache 2 licenses (C) 2014 by "dominictarr" checked out 2015-01-04
-# MIT / Apache 2 licenses (C) 2015 by "dominictarr" merged 0.2.0 2015-04-01
-# further development (C) 2015 Jim Klimov <EvgenyKlimov@eaton.com>
-# at fork https://github.com/jimklimov/JSON.sh
+#
+# Copyright (C) 2014-2015 Dominic Tarr
+# Copyright (C) 2015 Eaton
+#
+#! \file    JSON.sh
+#  \brief   A json parser written in bash
+#  \author  Dominic Tarr <https://github.com/dominictarr>
+#  \author  Jim Klimov <EvgenyKlimov@Eaton.com>
+#  \details Based on Dominic Tarr JSON.sh
+#           https://github.com/dominictarr/JSON.sh/blob/master/JSON.sh
+#           Forked and further modified by Eaton / Jim Klimov
+#           https://github.com/jimklimov/JSON.sh
+#
+# The MIT License (MIT)
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+# Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 throw () {
   echo "$*" >&2
