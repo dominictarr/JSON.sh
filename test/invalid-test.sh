@@ -6,7 +6,7 @@ cd ${0%/*}
 # http://en.wikipedia.org/wiki/Test_Anything_Protocol
 
 fails=0
-tests=`ls invalid/* -1 | wc -l`
+tests=`ls invalid/* | wc -l`
 
 echo "1..${tests##* }"
 for input in invalid/*
