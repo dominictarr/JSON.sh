@@ -32,6 +32,9 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 -b
 > Brief output. Combines 'Leaf only' and 'Prune empty' options.
 
+-f format
+> Output format. See below.
+
 -l
 > Leaf only. Only show leaf nodes, which stops data duplication.
 
@@ -46,6 +49,45 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 
 -h
 > Show help text.
+
+## Format options
+By default, parsed values are output in the form
+
+``` bash
+[path]<tab>value
+```
+
+where ```path``` is the path for the value, ```<tab>``` is a literal tab, and value is the JSON value. That's nice and human-readable, but not always the best for parsing. These additional output formats are available. Note that the -f option will accept the shortest unique name. IE: you can use ```ke``` instead of ```key```, but not just ```k``` because that is ambiguous with the ```key```, ```key-value``` and ```kv``` options.
+
+### default
+This is the default output format that you get if -f isn't specified.
+
+### array
+This produces output suitable for loading directly into a bash associative array. It implies -n.
+
+```bash
+[path]=value
+```
+
+### key
+Output just paths, one per line, without []'s. For example, run against package.json you get:
+
+``` bash
+...
+"bin","JSON.sh"
+"bin"
+...
+```
+
+### key-value (or just kv for short)
+Suitable for processing with the read built-in.
+
+``` bash
+path<tab>value
+```
+
+### value
+Similar to key mode, except you get values one-per-line instead.
 
 ## Cool Links
 
