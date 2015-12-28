@@ -38,6 +38,9 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 -p
 > Prune empty. Exclude fields with empty values.
 
+-n
+> No-head. Don't show nodes that have no path. Normally these output a leading '[]', which you can't use in a bash array.
+
 -s
 > Remove escaping of the solidus symbol (stright slash).
 
