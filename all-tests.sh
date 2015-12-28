@@ -18,13 +18,15 @@ do
     passed=$((passed+1))
   else
     echo FAIL: $test $fail
+    failed="$failed $test"
     fail=$((fail+ret))
   fi
 done
 
 if [ $fail -eq 0 ]; then
-  echo -n 'SUCCESS '
+  echo "SUCCESS $passed / $tests"
 else
-  echo -n 'FAILURE '
+  echo "FAILURE $passed / $tests"
+  echo "Failed tests: $failed"
+  exit 1
 fi
-echo   $passed / $tests
