@@ -8,6 +8,7 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+NO_HEAD=0
 NORMALIZE_SOLIDUS=0
 
 usage() {
@@ -17,6 +18,7 @@ usage() {
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
   echo "-s - Remove escaping of the solidus symbol (stright slash)."
   echo "-h - This help text."
   echo
@@ -38,6 +40,8 @@ parse_options() {
       -l) LEAFONLY=1
       ;;
       -p) PRUNE=1
+      ;;
+      -n) NO_HEAD=1
       ;;
       -s) NORMALIZE_SOLIDUS=1
       ;;
@@ -170,6 +174,8 @@ parse_value () {
        ;;
   esac
   [ "$value" = '' ] && return
+  [ "$NO_HEAD" -eq 1 ] && [ -z "$jpath" ] && return
+
   [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
   [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1
   [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
@@ -194,3 +200,5 @@ then
   parse_options "$@"
   tokenize | parse
 fi
+
+# vi: expandtab sw=2 ts=2
