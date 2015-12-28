@@ -57,19 +57,19 @@ By default, parsed values are output in the form
 [path]<tab>value
 ```
 
-where ```path``` is the path for the value, ```<tab>``` is a literal tab, and value is the JSON value. That's nice and human-readable, but not always the best for parsing. These additional output formats are available. Note that the -f option will accept the shortest unique name. IE: you can use ```ke``` instead of ```key```, but not just ```k``` because that is ambiguous with the ```key```, ```key-value``` and ```kv``` options.
+where ```path``` is the path for the value, ```<tab>``` is a literal tab, and value is the JSON value. That's nice and human-readable, but not always the best for parsing. These additional output formats are available. There are also short-forms available.
 
-### default
+### default (short: d)
 This is the default output format that you get if ```-f``` isn't specified.
 
-### array
+### array (short: a)
 This produces output suitable for loading directly into a bash associative array. It implies -n.
 
 ```bash
 [path]=value
 ```
 
-### key
+### key-only (short: key)
 Output just paths, one per line, without []'s. For example, run against package.json you get:
 
 ``` bash
@@ -79,14 +79,14 @@ Output just paths, one per line, without []'s. For example, run against package.
 ...
 ```
 
-### key-value (or just kv for short)
+### key-value (short: kv)
 Suitable for processing with the read built-in.
 
 ``` bash
 path<tab>value
 ```
 
-### value
+### value-only (short: value)
 Similar to key mode, except you get values one-per-line instead.
 
 ## Cool Links
