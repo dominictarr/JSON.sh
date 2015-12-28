@@ -60,7 +60,7 @@ By default, parsed values are output in the form
 where ```path``` is the path for the value, ```<tab>``` is a literal tab, and value is the JSON value. That's nice and human-readable, but not always the best for parsing. These additional output formats are available. Note that the -f option will accept the shortest unique name. IE: you can use ```ke``` instead of ```key```, but not just ```k``` because that is ambiguous with the ```key```, ```key-value``` and ```kv``` options.
 
 ### default
-This is the default output format that you get if -f isn't specified.
+This is the default output format that you get if ```-f``` isn't specified.
 
 ### array
 This produces output suitable for loading directly into a bash associative array. It implies -n.
