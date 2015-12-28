@@ -33,7 +33,7 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 > Brief output. Combines 'Leaf only' and 'Prune empty' options.
 
 -f format
-> Output format. See below.
+> Output format. See [below](#format-options).
 
 -l
 > Leaf only. Only show leaf nodes, which stops data duplication.
