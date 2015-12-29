@@ -21,7 +21,7 @@ usage() {
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
-  echo "-f - Output format (array (implies -n), default, key-only (implies -n), key-value, value-only or short forms). See README."
+  echo "-f - Output format (array (implies -n), default, key-only (implies -n), key-value (implies -n), value-only or short forms). See README."
   echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
   echo "-s - Remove escaping of the solidus symbol (stright slash)."
   echo "-h - This help text."
@@ -48,6 +48,7 @@ parse_format_option() {
     kv|key-value)
       FORMAT_STRING="%s\t%s\n"
       FORMAT=key-value
+      NO_HEAD=1
       ;;
     value|value-only)
       FORMAT_STRING= # Set empty as a flag to parse_value()

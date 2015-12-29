@@ -71,7 +71,7 @@ do
         ;;
       key-value)
         # Pattern matches '^[<not ]]' and extracts the part in the []
-        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" > $expected
+        cat $parsed | safegrep -E -v '^\[]' | sed -e 's/^\[//' -e "s/]$tab/$tab/" > $expected
         ;;
       value-only)
         # Pattern matches '^[<not ]]' and extracts the part in the []
