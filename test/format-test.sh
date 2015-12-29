@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
+trap 'echo "$BASH_SOURCE: line $LINENO" >&2' ERR
 set -o errexit -o errtrace -o pipefail
-trap 'echo "Error on line ${LINENO}"' ERR
 
 cd ${0%/*}
 
