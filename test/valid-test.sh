@@ -3,7 +3,7 @@
 cd ${0%/*}
 fails=0
 i=0
-tests=`ls valid/*.json -1l | wc -l`
+tests=`ls valid/*.json | wc -l`
 echo "1..$tests"
 for input in valid/*.json
 do
