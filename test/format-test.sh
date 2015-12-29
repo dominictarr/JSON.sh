@@ -41,6 +41,14 @@ runtest() {
   fi
 }
 
+safegrep() {
+  # grep returns 1 if no lines were selected, so we need to ignore it
+  grep "$@" && return 0 || rc=$?
+  [ $rc -eq 1 ] && return 0
+  echo "grep returned $rc at line $LINENO" >&2
+  exit $rc
+}
+
 for input in valid/*.json
 do
   input_file=${input##*/}
@@ -51,14 +59,15 @@ do
     expected=$tmp${input_file%.json}.$format
     case "$format" in
       array)
-        cat $parsed | tr '\t' = > $expected
+        cat $parsed | tr '\t' = | safegrep -E -v '^\[]=' > $expected
+        $reset
         ;;
       default)
         cp $parsed $expected
         ;;
       key-only)
         # Pattern matches '^[<not ]]' and extracts the part in the []
-        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 1 > $expected
+        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 1 | safegrep -E -v '^$' > $expected
         ;;
       key-value)
         # Pattern matches '^[<not ]]' and extracts the part in the []
@@ -66,7 +75,7 @@ do
         ;;
       value-only)
         # Pattern matches '^[<not ]]' and extracts the part in the []
-        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 2 > $expected
+        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 2 | safegrep -E -v '^$' > $expected
         ;;
       *)
         echo "$0: Unknown format option '$format'"
