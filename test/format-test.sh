@@ -49,7 +49,7 @@ do
   for format in ${formats[@]}
   do
     expected=$tmp${input_file%.json}.$format
-    case $format in
+    case "$format" in
       array)
         cat $parsed | tr '\t' = > $expected
         ;;
