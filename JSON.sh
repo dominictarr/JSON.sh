@@ -11,6 +11,7 @@ PRUNE=0
 NO_HEAD=0
 NORMALIZE_SOLIDUS=0
 FORMAT=default
+FORMAT_STRING="[%s]\t%s\n"
 
 usage() {
   echo
@@ -19,7 +20,7 @@ usage() {
   echo "-p - Prune empty. Exclude fields with empty values."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
-  echo "-f - Output format (array, default, key-only, key-value, value-only or short forms). See README."
+  echo "-f - Output format (array (implies -n), default, key-only (implies -n), key-value, value-only or short forms). See README."
   echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
   echo "-s - Remove escaping of the solidus symbol (stright slash)."
   echo "-h - This help text."
@@ -28,13 +29,28 @@ usage() {
 
 parse_format_option() {
   case $1 in
-    a|array) echo array ;;
-    d|default) echo default ;;
-    key|key-only) echo key-only ;;
-    kv|key-value) echo key-value ;;
-    value|value-only) echo value-only ;;
-    *) echo "Invalid format specified: $1"
-      exit 1
+    a|array)
+      FORMAT_STRING="[%s]=%s\n"
+      NO_HEAD=1
+      FORMAT=array
+      ;;
+    d|default)
+      FORMAT_STRING="[%s]\t%s\n"
+      FORMAT=default
+      ;;
+    key|key-only)
+      FORMAT_STRING= # Set empty as a flag to parse_value()
+      FORMAT=key-only
+      NO_HEAD=1
+      ;;
+    kv|key-value)
+      FORMAT_STRING="%s\t%s\n"
+      FORMAT=key-value
+      ;;
+    value|value-only)
+      FORMAT_STRING= # Set empty as a flag to parse_value()
+      FORMAT=value-only
+      ;;
     # It's important to throw an error here if we were passed an empty argument
     *) throw "Invalid format '$1' specified. Valid options are array, default, key-only, key-value or value-only."
   esac
@@ -42,8 +58,7 @@ parse_format_option() {
 
 parse_options() {
   set -- "$@"
-  local ARGN=$#
-  while [ "$ARGN" -ne 0 ]
+  while [ $# -ne 0 ]
   do
     case $1 in
       -h) usage
@@ -53,7 +68,7 @@ parse_options() {
           LEAFONLY=1
           PRUNE=1
       ;;
-      -f) FORMAT=`parse_format_option $2`
+      -f) parse_format_option "$2"
           shift 1
       ;;
       -l) LEAFONLY=1
@@ -70,7 +85,6 @@ parse_options() {
       ;;
     esac
     shift 1
-    ARGN=$((ARGN-1))
   done
 }
 
@@ -179,7 +193,7 @@ parse_object () {
 }
 
 parse_value () {
-  local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0 format_string
+  local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
     '{') parse_object "$jpath" ;;
     '[') parse_array  "$jpath" ;;
@@ -202,29 +216,22 @@ parse_value () {
     [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1
 
   if [ "$print" -eq 1 ]; then
-    # Have to handle key-only and value-only special because they don't use both variables
-    case $FORMAT in
-      key-only)
-        echo "$jpath"
-        ;;
-      value-only)
-        echo "$value"
-        ;;
-      array)
-        format_string="[%s]=%s\n"
-        ;;
-      default)
-        format_string="[%s]\t%s\n"
-        ;;
-      key-value)
-        format_string="%s\t%s\n"
-        ;;
-      *)
-        throw "Unknown format option '$FORMAT'. (Note: short-forms not supported by direct function call.)"
-        ;;
-    esac
-
-    [ -n "$format_string" ] && printf "$format_string" "$jpath" "$value"
+    if [ -n "$FORMAT_STRING" ]; then
+      printf "$FORMAT_STRING" "$jpath" "$value"
+    else
+      # Have to handle key-only and value-only special because they don't use both variables
+      case $FORMAT in
+        key-only)
+          echo "$jpath"
+          ;;
+        value-only)
+          echo "$value"
+          ;;
+        *)
+          throw "Unknown format option '$FORMAT'. HINT: Use parse_options()."
+          ;;
+      esac
+    fi
   fi
   :
 }
