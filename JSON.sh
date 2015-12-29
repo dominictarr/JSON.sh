@@ -35,6 +35,8 @@ parse_format_option() {
     value|value-only) echo value-only ;;
     *) echo "Invalid format specified: $1"
       exit 1
+    # It's important to throw an error here if we were passed an empty argument
+    *) throw "Invalid format '$1' specified. Valid options are array, default, key-only, key-value or value-only."
   esac
 }
 
