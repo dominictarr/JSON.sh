@@ -29,7 +29,7 @@ done
 runtest() {
   local arg=$1 out
 
-  printf -v out "JSON.sh %q %-${longest_format}s < %q" '-f' "$arg" "$input"
+  printf -v out "${0%/*}/../JSON.sh %q %-${longest_format}s < %q" '-f' "$arg" "${0%/*}/$input"
   i=$((i+1))
   if ! ../JSON.sh -f $arg < "$input" | diff -u - "$expected" 
   then
