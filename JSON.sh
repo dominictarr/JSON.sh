@@ -8,6 +8,7 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+FORCE_NO_HEAD=0
 NO_HEAD=0
 NORMALIZE_SOLIDUS=0
 FORMAT=default
@@ -28,6 +29,7 @@ usage() {
 }
 
 parse_format_option() {
+  NO_HEAD=$FORCE_NO_HEAD
   case $1 in
     a|array)
       FORMAT_STRING="[%s]=%s\n"
@@ -75,7 +77,8 @@ parse_options() {
       ;;
       -p) PRUNE=1
       ;;
-      -n) NO_HEAD=1
+      -n) FORCE_NO_HEAD=1
+          NO_HEAD=1
       ;;
       -s) NORMALIZE_SOLIDUS=1
       ;;
