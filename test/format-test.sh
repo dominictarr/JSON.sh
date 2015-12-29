@@ -75,7 +75,7 @@ do
         ;;
       value-only)
         # Pattern matches '^[<not ]]' and extracts the part in the []
-        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 2 | safegrep -E -v '^$' > $expected
+        cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 2 > $expected
         ;;
       *)
         echo "$0: Unknown format option '$format'"
