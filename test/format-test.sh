@@ -69,7 +69,7 @@ do
         cat $parsed | sed -e 's/^\[//' -e "s/]$tab/$tab/" | cut -f 2 > $expected
         ;;
       *)
-        echo "Unknown format option $format"
+        echo "$0: Unknown format option '$format'"
         exit 1
     esac
 
