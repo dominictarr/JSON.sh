@@ -69,7 +69,7 @@ findbin() {
     # Locates a named binary or one from path, prints to stdout
     local BIN
     for P in "$@" ; do case "$P" in
-    /*) [ -x "$P" ] && BIN="$P" && break;;
+        /*) [ -x "$P" ] && BIN="$P" && break;;
         *) BIN="`which "$P" 2>/dev/null | tail -1`" && [ -n "$BIN" ] && [ -x "$BIN" ] && break || BIN="";;
     esac; done
     [ -n "$BIN" ] && [ -x "$BIN" ] && echo "$BIN" && return 0
@@ -268,8 +268,12 @@ parse_options() {
           TOXIC_NEWLINE=1
       ;;
       -d) DEBUG=$(($DEBUG+1))
+          JSONSH_DEBUGGING_SETUP=notdone
+          JSONSH_DEBUGGING_REPORT=notdone
       ;;
       -d=*) DEBUG="`echo "$1" | $GSED 's,^-d=,,' 2>/dev/null`"
+          JSONSH_DEBUGGING_SETUP=notdone
+          JSONSH_DEBUGGING_REPORT=notdone
       ;;
       -Q) COOKASTRING=1
       ;;
@@ -599,51 +603,86 @@ smart_parse() {
     fi
 }
 
-###########################################################
-### Active logic
+JSONSH_DEBUGGING_SETUP=notdone
+JSONSH_DEBUGGING_REPORT=notdone
+JSONSH_DEBUGGING_DEFAULTS=notdone
+jsonsh_debugging_defaults() {
+    [ x"$JSONSH_DEBUGGING_DEFAULTS" = xdone ] && return 0
+    ### Caller can disable specific debuggers by setting their level too high
+    validate_debuglevel
+    default_posval DEBUGLEVEL_PRINTPATHVAL		1
+    default_posval DEBUGLEVEL_PRINTTOKEN		2
+    default_posval DEBUGLEVEL_PRINTTOKEN_PIPELINE	3
+    default_posval DEBUGLEVEL_TRACE_X		4
+    default_posval DEBUGLEVEL_TRACE_V		5
+    default_posval DEBUGLEVEL_MERGE_ERROUT		4
+    JSONSH_DEBUGGING_DEFAULTS="done"
+}
 
-### Caller can disable specific debuggers by setting their level too high
-validate_debuglevel
-default_posval DEBUGLEVEL_PRINTPATHVAL		1
-default_posval DEBUGLEVEL_PRINTTOKEN		2
-default_posval DEBUGLEVEL_PRINTTOKEN_PIPELINE	3
-default_posval DEBUGLEVEL_TRACE_X		4
-default_posval DEBUGLEVEL_TRACE_V		5
-default_posval DEBUGLEVEL_MERGE_ERROUT		4
+jsonsh_debugging_setup() {
+    [ x"$JSONSH_DEBUGGING_SETUP" = xdone ] && return 0
+    # Note that the CLI options enable some debug level
 
-if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
-then
+    [ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ] && \
+        exec 2>&1
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ] && \
+        set +v
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ] && \
+        set -x
+
+    JSONSH_DEBUGGING_SETUP="done"
+}
+
+jsonsh_debugging_report() {
+    [ x"$JSONSH_DEBUGGING_REPORT" = xdone ] && return 0
+    # Note that the CLI options enable some debug level
+
+    [ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ] && \
+        echo "[$$]DEBUG: Merge stderr and stdout for easier tracing with less" \
+        "(DEBUGLEVEL_MERGE_ERROUT=$DEBUGLEVEL_MERGE_ERROUT)" >&2
+    [ "$DEBUG" -gt 0 ] && \
+        echo "[$$]DEBUG: Enabled (debugging level $DEBUG)" >&2
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTPATHVAL" ] && \
+        echo "[$$]DEBUG: Enabled tracing of path:value printing decisions" \
+        "(DEBUGLEVEL_PRINTPATHVAL=$DEBUGLEVEL_PRINTPATHVAL)" >&2
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ] && \
+        echo "[$$]DEBUG: Enabled printing of each processed token" \
+        "(DEBUGLEVEL_PRINTTOKEN=$DEBUGLEVEL_PRINTTOKEN)" >&2
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ] && \
+        echo "[$$]DEBUG: Enabled tracing of read-in token conversions" \
+        "(DEBUGLEVEL_PRINTTOKEN_PIPELINE=$DEBUGLEVEL_PRINTTOKEN_PIPELINE)" >&2
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ] && \
+        echo "[$$]DEBUG: Enable execution tracing (-v)" \
+        "(DEBUGLEVEL_TRACE_V=$DEBUGLEVEL_TRACE_V)" >&2
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ] && \
+        echo "[$$]DEBUG: Enable execution tracing (-x)" \
+        "(DEBUGLEVEL_TRACE_X=$DEBUGLEVEL_TRACE_X)" >&2
+
+    JSONSH_DEBUGGING_REPORT="done"
+}
+
+jsonsh_cli() {
+  # All the logic needed to parse the CLI options and the JSON stdin
+  # for a common case "cat file.json | tokenize | parse" can suffice
+  # NOTE: If the caller sets up some specific different debugging envvars
+  # then consider changing JSONSH_DEBUGGING_SETUP and JSONSH_DEBUGGING_REPORT
+  # to e.g. "notdone" as well
   parse_options "$@"
-  # Note that the options enable some debug level
-
-  [ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ] && \
-    exec 2>&1 && \
-    echo "[$$]DEBUG: Merge stderr and stdout for easier tracing with less" \
-	"(DEBUGLEVEL_MERGE_ERROUT=$DEBUGLEVEL_MERGE_ERROUT)" >&2
-  [ "$DEBUG" -gt 0 ] && \
-    echo "[$$]DEBUG: Enabled (debugging level $DEBUG)" >&2
-  [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTPATHVAL" ] && \
-    echo "[$$]DEBUG: Enabled tracing of path:value printing decisions" \
-	"(DEBUGLEVEL_PRINTPATHVAL=$DEBUGLEVEL_PRINTPATHVAL)" >&2
-  [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ] && \
-    echo "[$$]DEBUG: Enabled printing of each processed token" \
-	"(DEBUGLEVEL_PRINTTOKEN=$DEBUGLEVEL_PRINTTOKEN)" >&2
-  [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ] && \
-    echo "[$$]DEBUG: Enabled tracing of read-in token conversions" \
-	"(DEBUGLEVEL_PRINTTOKEN_PIPELINE=$DEBUGLEVEL_PRINTTOKEN_PIPELINE)" >&2
-  [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ] && \
-    echo "[$$]DEBUG: Enable execution tracing (-v)" \
-	"(DEBUGLEVEL_TRACE_V=$DEBUGLEVEL_TRACE_V)" >&2 && \
-    set +v
-  [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ] && \
-    echo "[$$]DEBUG: Enable execution tracing (-x)" \
-	"(DEBUGLEVEL_TRACE_X=$DEBUGLEVEL_TRACE_X)" >&2 && \
-    set -x
-
+  jsonsh_debugging_setup
+  jsonsh_debugging_report
   tee_stderr RAW_INPUT $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   if [ "$COOKASTRING" -eq 1 ]; then
     cook_a_string
   else
     smart_parse
   fi
+}
+
+###########################################################
+### Active logic
+jsonsh_debugging_defaults
+
+if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
+then
+  jsonsh_cli "$@"
 fi
