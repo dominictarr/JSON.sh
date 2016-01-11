@@ -69,7 +69,7 @@ findbin() {
     # Locates a named binary or one from path, prints to stdout
     local BIN
     for P in "$@" ; do case "$P" in
-	/*) [ -x "$P" ] && BIN="$P" && break;;
+    /*) [ -x "$P" ] && BIN="$P" && break;;
         *) BIN="`which "$P" 2>/dev/null | tail -1`" && [ -n "$BIN" ] && [ -x "$BIN" ] && break || BIN="";;
     esac; done
     [ -n "$BIN" ] && [ -x "$BIN" ] && echo "$BIN" && return 0
@@ -83,19 +83,19 @@ findbin() {
 
 # Different OSes have different greps... we like a GNU one
 [ -z "$GGREP" ] && \
-    GGREP="`findbin ggrep /usr/xpg4/bin/grep grep`"
+    GGREP="`findbin /{usr,opt}/{gnu,sfw}/bin/grep ggrep /usr/xpg4/bin/grep grep`"
 [ -n "$GGREP" ] && [ -x "$GGREP" ] || throw "No GNU GREP was found!"
 
 [ -z "$GEGREP" ] && \
-    GEGREP="`findbin gegrep /usr/xpg4/bin/egrep egrep`"
+    GEGREP="`findbin /{usr,opt}/{gnu,sfw}/bin/egrep gegrep /usr/xpg4/bin/egrep egrep`"
 [ -n "$GEGREP" ] && [ -x "$GEGREP" ] || throw "No GNU EGREP was found!"
 
 [ -z "$GSORT" ] && \
-    GSORT="`findbin gsort sort /usr/xpg4/bin/sort`"
+    GSORT="`findbin /{usr,opt}/{gnu,sfw}/bin/sort gsort sort /usr/xpg4/bin/sort`"
 [ -n "$GSORT" ] && [ -x "$GSORT" ] || throw "No GNU SORT was found!"
 
 [ -z "$GSED" ] && \
-    GSED="`findbin /usr/xpg4/bin/sed gsed sed`"
+    GSED="`findbin /{usr,opt}/{gnu,sfw}/bin/sed /usr/xpg4/bin/sed gsed sed`"
 [ -n "$GSED" ] && [ -x "$GSED" ] || throw "No GNU SED was found!"
 
 usage() {
