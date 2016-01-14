@@ -695,6 +695,13 @@ jsonsh_cli() {
   esac
 }
 
+jsonsh_cli_subshell() (
+  # Same as above, but isolated in a subshell (no variables come back)
+  jsonsh_cli "$@"
+  exit $?
+)
+
+
 ###########################################################
 ### Active logic
 jsonsh_debugging_defaults
