@@ -385,10 +385,17 @@ cook_a_string() {
 cook_a_string_arg() {
     # Use routine above to cook a string passed as "$1" unless it is trivial
     [[ -z "$1" ]] && return 0
-    [[ "$1" =~ ^[A-Za-z0-9\ \-\.\+\\\/\:\;\(\)\{\}]*$ ]] >/dev/null && \
-        echo "$1" && \
+    # Strangely, for some OSes it does not suffice that all chars must be from
+    # the first pattern - should explicitly test that some are not forbidden
+    if ! [[ "$1" =~ [\\\"] ]] >/dev/null && \
+         [[ "$1" =~ ^[A-Za-z0-9\ \-\.\+\/\@\:\;\!\%\,\&\(\)\{\}]*$ ]] >/dev/null \
+    ; then
+        print_debug $DEBUGLEVEL_PRINTTOKEN_PIPELINE "cook_a_string_arg(): input trivial, not cooking: '$1'"
+        echo "$1"
         return 0
+    fi
 
+    print_debug $DEBUGLEVEL_PRINTTOKEN_PIPELINE "cook_a_string_arg(): input not trivial, cooking: '$1'"
     echo "$1" | cook_a_string
 }
 
