@@ -149,7 +149,7 @@ usage() {
   echo '       COOKEDSTRING="`somecommand 2>&1 | JSON.sh -Q`"'
   echo "A '-QQ' mode also exists to cook a (single) command-line argument:"
   echo '       COOKEDSTRING="`JSON.sh -QQ "$SAVED_INPUT"`"'
-  echo "This can also be used to pack JSON in JSON."
+  echo "This can also be used to pack JSON in JSON. Note that '-QQ' ignores stdin."
   echo
 }
 
@@ -687,12 +687,19 @@ jsonsh_cli() {
   parse_options "$@"
   jsonsh_debugging_setup
   jsonsh_debugging_report
-  tee_stderr RAW_INPUT $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  case "$COOKASTRING" in
-  1) cook_a_string ;;
-  2) cook_a_string_arg "$COOKASTRING_INPUT" ;;
-  *) smart_parse ;;
-  esac
+  if [[ "$COOKASTRING" -eq 2 ]]; then
+    if [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ]] || \
+       [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ]] ; then
+        echo "[$$]DEBUG: Cooking an argument into JSON string and exiting:" "$1" >&2
+    fi
+    cook_a_string_arg "$COOKASTRING_INPUT"
+  else
+    tee_stderr RAW_INPUT $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
+    case "$COOKASTRING" in
+      1) cook_a_string ;;
+      *) smart_parse ;;
+    esac
+  fi
 }
 
 jsonsh_cli_subshell() (
