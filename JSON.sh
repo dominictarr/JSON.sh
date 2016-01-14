@@ -45,6 +45,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ -z "${BASH-}" ] ; then
+    # NOTE: This can break scripts which source this file and are not in bash
+    echo "ERROR: JSON.sh requires to be run with BASH interpreter! Subshelling..." >&2
+    /usr/bin/bash "$0" "$@"
+    exit $?
+fi
+
 throw () {
   echo "$*" >&2
   exit 1
