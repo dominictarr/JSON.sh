@@ -682,7 +682,9 @@ jsonsh_cli() {
 ### Active logic
 jsonsh_debugging_defaults
 
-if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
+# If not sourced into a bash script, parse stdin and quit
+if ([ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ]);
 then
   jsonsh_cli "$@"
+  exit $?
 fi
