@@ -64,6 +64,7 @@ NORMALIZE_NUMBERS_STRIP=0
 EXTRACT_JPATH=""
 TOXIC_NEWLINE=0
 COOKASTRING=0
+COOKASTRING_INPUT=""
 
 findbin() {
     # Locates a named binary or one from path, prints to stdout
@@ -146,6 +147,8 @@ usage() {
   echo "into a string valid for JSON (backslashes, quotes and newlines escaped,"
   echo "with no trailing newline); after cooking, the script exits:"
   echo '       COOKEDSTRING="`somecommand 2>&1 | JSON.sh -Q`"'
+  echo "A '-QQ' mode also exists to cook a (single) command-line argument:"
+  echo '       COOKEDSTRING="`JSON.sh -QQ "$SAVED_INPUT"`"'
   echo "This can also be used to pack JSON in JSON."
   echo
 }
@@ -277,6 +280,10 @@ parse_options() {
       ;;
       -Q) COOKASTRING=1
       ;;
+      -QQ) COOKASTRING=2
+          COOKASTRING_INPUT="$2"
+          shift
+      ;;
       ?*) echo "ERROR: Unknown option '$1'."
           usage
           exit 0
@@ -366,6 +373,16 @@ cook_a_string() {
       [ -z "$FIRST" ] && FIRST='\n'
       done; }
     :
+}
+
+cook_a_string_arg() {
+    # Use routine above to cook a string passed as "$1" unless it is trivial
+    [[ -z "$1" ]] && return 0
+    [[ "$1" =~ ^[A-Za-z0-9\ \-\.\+\\\/\:\;\(\)\{\}]*$ ]] >/dev/null && \
+        echo "$1" && \
+        return 0
+
+    echo "$1" | cook_a_string
 }
 
 tokenize () {
@@ -671,11 +688,11 @@ jsonsh_cli() {
   jsonsh_debugging_setup
   jsonsh_debugging_report
   tee_stderr RAW_INPUT $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  if [ "$COOKASTRING" -eq 1 ]; then
-    cook_a_string
-  else
-    smart_parse
-  fi
+  case "$COOKASTRING" in
+  1) cook_a_string ;;
+  2) cook_a_string_arg "$COOKASTRING_INPUT" ;;
+  *) smart_parse ;;
+  esac
 }
 
 ###########################################################
