@@ -1,6 +1,6 @@
 # JSON.sh
 
-yo, so it's a json parser written in bash
+yo, so it's a json parser written in shell, compatible with ash, bash, dash and zsh
 
 pipe json to it, and it traverses the json objects and prints out the 
 path to the current object (as a JSON array) and then the object, without whitespace.

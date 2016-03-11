@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-throw () {
+throw() {
   echo "$*" >&2
   exit 1
 }
@@ -73,14 +73,14 @@ tokenize () {
   local ESCAPE
   local CHAR
 
-  if echo "test string" | egrep -ao --color=never "test" &>/dev/null
+  if echo "test string" | egrep -ao --color=never "test" >/dev/null 2>&1
   then
     GREP='egrep -ao --color=never'
   else
     GREP='egrep -ao'
   fi
 
-  if echo "test string" | egrep -o "test" &>/dev/null
+  if echo "test string" | egrep -o "test" >/dev/null 2>&1
   then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\]'
@@ -95,7 +95,11 @@ tokenize () {
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
+  # Force zsh to expand $A into multiple words
+  local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')
+  if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi
   $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
+  if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi
 }
 
 parse_array () {
@@ -168,7 +172,7 @@ parse_value () {
     ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
     *) value=$token
        # if asked, replace solidus ("\/") in json strings with normalized value: "/"
-       [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=${value//\\\//\/}
+       [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=$(echo "$value" | sed 's#\\/#/#g')
        isleaf=1
        [ "$value" = '""' ] && isempty=1
        ;;
