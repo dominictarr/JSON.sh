@@ -2,6 +2,8 @@
 
 yo, so it's a json parser written in shell, compatible with ash, bash, dash and zsh
 
+[![travis](https://secure.travis-ci.org/dominictarr/JSON.sh.png?branch=master)](https://travis-ci.org/dominictarr/JSON.sh)
+
 pipe json to it, and it traverses the json objects and prints out the 
 path to the current object (as a JSON array) and then the object, without whitespace.
 
