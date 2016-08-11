@@ -19,7 +19,7 @@ usage() {
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
   echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
-  echo "-s - Remove escaping of the solidus symbol (stright slash)."
+  echo "-s - Remove escaping of the solidus symbol (straight slash)."
   echo "-h - This help text."
   echo
 }
