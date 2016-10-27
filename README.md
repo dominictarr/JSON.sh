@@ -57,7 +57,7 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 
 ## Installation
 
-install via npm or from AUR on archlinux
+Install with npm, pip or from AUR on Archlinux:
 
 * `npm install -g JSON.sh`
 * `pip install git+https://github.com/dominictarr/JSON.sh#egg=JSON.sh`
