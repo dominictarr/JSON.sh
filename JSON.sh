@@ -83,11 +83,11 @@ tokenize () {
   if echo "test string" | egrep -o "test" >/dev/null 2>&1
   then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    CHAR='[^[:cntrl:]"\\]'
+    CHAR='([^[:cntrl:]"\\]|)'
   else
     GREP=awk_egrep
     ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    CHAR='[^[:cntrl:]"\\\\]'
+    CHAR='([^[:cntrl:]"\\\\]|\x7F)'
   fi
 
   local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
