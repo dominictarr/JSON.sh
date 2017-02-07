@@ -234,8 +234,7 @@ tee_stderr() {
 
 parse_options() {
   set -- "$@"
-  local ARGN=$#
-  while [ "$ARGN" -ne 0 ]
+  while [ "$#" -gt 0 ]
   do
     case "$1" in
       -h) usage
@@ -324,7 +323,6 @@ parse_options() {
       ;;
     esac
     shift 1
-    ARGN=$((ARGN-1))
   done
 
   validate_debuglevel
