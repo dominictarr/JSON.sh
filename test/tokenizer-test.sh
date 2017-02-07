@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd ${0%/*}
+cd "$(dirname "$0")"
 
 # Can't detect sourcing in sh, so immediately terminate the attempt to parse
 . ../JSON.sh </dev/null
@@ -8,16 +8,16 @@ cd ${0%/*}
 i=0
 fails=0
 ttest () {
-  i=$((i+1))
-  local input="$1"; shift
-  local expected="$(printf '%s\n' "$@")"
+  i="$(expr $i + 1)"
+  input="$1"; shift
+  expected="$(printf '%s\n' "$@")"
   echo "$expected" > /tmp/json_ttest_expected
   if echo "$input" | tokenize | diff -u - /tmp/json_ttest_expected
   then
-    echo "ok $i - $input"    
-  else 
+    echo "ok $i - $input"
+  else
     echo "not ok $i - $input"
-    fails=$((fails+1))
+    fails="$(expr $fails + 1)"
   fi
 }
 
@@ -48,7 +48,7 @@ ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
 
 if ! cat ../package.json | tokenize >/dev/null
 then
-  fails=$((fails+1))
+  fails="$(expr $fails + 1)"
   echo "Tokenizing package.json failed!"
 fi
 

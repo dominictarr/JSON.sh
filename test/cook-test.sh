@@ -1,19 +1,20 @@
-#! /usr/bin/env bash
+#!/bin/sh
 
-cd ${0%/*}
+cd "$(dirname "$0")"
 
-. ../JSON.sh
+# Can't detect sourcing in sh, so immediately terminate the attempt to parse
+. ../JSON.sh </dev/null
 
 cooktest() {
     INPUT="$1"
     EXPECT="$2"
-    i=$((i+1))
+    i="$(expr $i + 1)"
     OUT="$(cook_a_string_arg "$INPUT")"
-    if [ $? = 0 -a x"$OUT" = x"$EXPECT" ]; then
+    if [ $? = 0 ] && [ x"$OUT" = x"$EXPECT" ]; then
         echo "ok $i - '$INPUT' => '$OUT'"
     else
         echo "not ok $i - '$INPUT' => '$OUT' (expected '$EXPECT')"
-        fails=$((fails+1))
+        fails="$(expr $fails+1)"
     fi
 }
 

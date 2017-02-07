@@ -9,7 +9,8 @@ LANG=C
 LC_ALL=C
 export LANG LC_ALL
 
-cd ${0%/*}
+cd "$(dirname "$0")"
+
 fails=0
 passes=0
 skips=0
@@ -19,13 +20,13 @@ i=0
 CHOMPEXT='\.\(parsed\|sorted\|numnormalized\|normalized\|json\).*$'
 [ $# -gt 0 ] && \
     FILES="$(for F in "$@"; do echo valid/"`basename "$F" | sed "s,${CHOMPEXT},,"`".json ; done | sort | uniq)" || \
-    FILES="`ls -1 valid/*.json`"
+    FILES="$(ls -1 valid/*.json)"
 
 [ -z "$FILES" ] && echo "error - no files found to test!" >&2 && exit 1
 
-tests="`echo "$FILES" | wc -l`"
+tests="$(echo "$FILES" | wc -l)"
 ### We currently have up to 8 extensions to consider per test
-tests="$(expr $tests * 8)"
+tests="$(expr $tests \* 8)"
 echo "1..$tests"
 
 for input in $FILES
@@ -36,13 +37,14 @@ do
   ; do
     if [ ! -f "$input" ]; then
       echo "error - missing input file '$input', assuming all its tests failed"
-      fails=$(expr $fails+8)
+      fails="$(expr $fails + 8)"
       break
     fi
 
-    expected="${input%.json}.$EXT"
+#    expected="${input%.json}.$EXT"
+    expected="$(dirname "$input")/$(basename "$input" .json).$EXT"
     if [ -f "$expected" -o -n "$JSON_TEST_GENERATE" ]; then
-      i=$(expr $i + 1)
+      i="$(expr $i + 1)"
       case "$EXT" in
         sorted) OPTIONS="-S='-n -r'" ;;
         normalized) OPTIONS="-N" ;;
@@ -59,30 +61,31 @@ do
         if ! eval ../JSON.sh $OPTIONS < "$input" > "$expected"
         then
           echo "generation not ok $i - $input $EXT"
-          fails=$((fails+1))
+          fails="$(expr $fails + 1)"
           mv -f "$expected" "$expected.failed"
         else
           echo "generation ok $i - $input $EXT"
-          passes=$(expr $passes + 1)
-          generated=$(expr $generated + 1)
+          passes="$(expr $passes + 1)"
+          generated="$(expr $generated + 1)"
         fi
         continue
       fi
 
-      if ! eval ../JSON.sh $OPTIONS < "$input" | diff -u - "$expected" 
+      if ! eval ../JSON.sh $OPTIONS < "$input" | diff -u - "$expected"
       then
         echo "not ok $i - $input $EXT"
-        fails=$(expr $fails + 1)
+        fails="$(expr $fails + 1)"
       else
         echo "ok $i - $input $EXT"
-        passes=$(expr $passes + 1)
+        passes="$(expr $passes + 1)"
       fi
     else
       # echo "skip (missing result file) - $input $EXT"
-      skips=$(expr $skips + 1)
+      skips="$(expr $skips + 1)"
     fi
   done
 done
+
 [ -n "$JSON_TEST_GENERATE" ] && echo "$generated expected results generated"
 [ -n "$skips" ] && echo "$skips test(s) skipped (missing expected results file)"
 echo "$passes test(s) succeeded"

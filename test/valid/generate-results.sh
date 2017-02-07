@@ -10,38 +10,38 @@ export C
 JSONSH=../../JSON.sh
 
 generate() {
-	F="$1"
-	[ -s "$F" ] || return
+    F="$1"
+    [ -s "$F" ] || return
 
-	B="`basename "$F" .json`"
-	echo "=== Generating results for '$F'..."
-	RES=0
+    B="$(basename "$F" .json)"
+    echo "=== Generating results for '$F'..."
+    RES=0
 
-	EXT=parsed
-	$JSONSH < "$F" > "$B.$EXT" || \
-	    { RES=$?; echo "ERROR with $EXT"; }
+    EXT=parsed
+    $JSONSH < "$F" > "$B.$EXT" || \
+        { RES=$?; echo "ERROR with $EXT"; }
 
-	EXT=sorted
-	$JSONSH -S="-n -r" < "$F" > "$B.$EXT" || \
-	    { RES=$?; echo "ERROR with $EXT"; }
+    EXT=sorted
+    $JSONSH -S="-n -r" < "$F" > "$B.$EXT" || \
+        { RES=$?; echo "ERROR with $EXT"; }
 
-	EXT=normalized
-	$JSONSH -N < "$F" > "$B.$EXT" || \
-	    { RES=$?; echo "ERROR with $EXT"; }
+    EXT=normalized
+    $JSONSH -N < "$F" > "$B.$EXT" || \
+        { RES=$?; echo "ERROR with $EXT"; }
 
-	EXT=normalized_sorted
-	$JSONSH -N='-n' < "$F" > "$B.$EXT" || \
-	    { RES=$?; echo "ERROR with $EXT"; }
+    EXT=normalized_sorted
+    $JSONSH -N='-n' < "$F" > "$B.$EXT" || \
+        { RES=$?; echo "ERROR with $EXT"; }
 
-	return $RES
+    return $RES
 }
 
 if [ $# -gt 0 ]; then
     for F in "$@" ; do
-	generate "$F"
+        generate "$F"
     done
 else
     for F in *.json ; do
-	generate "$F"
+        generate "$F"
     done
 fi
