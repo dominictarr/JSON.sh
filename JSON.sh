@@ -59,9 +59,13 @@
 # for certain code paths.
 
 SHELL_REGEX=no
+SHELL_TWOSLASH=no
 if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
     SHELL_REGEX=yes
+    SHELL_TWOSLASH=yes
 fi
+
+# TODO: detect if busybox - there SHELL_TWOSLASH=yes too, but not in DASH
 
 false && \
 if [ -z "${BASH-}" ] && [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
@@ -358,10 +362,14 @@ strip_newlines() {
   $GGREP '' | \
   tee_stderr BEFORE_STRIP $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   while IFS="" read -r ILINE; do
-    # Remove escaped quotes:
-    LINESTRIP="${ILINE//\\\"}"
-    # Remove all chars but remaining quotes:
-    LINESTRIP="${LINESTRIP//[^\"]}"
+    if [ "$SHELL_TWOSLASH" = yes ]; then
+        # Remove escaped quotes:
+        LINESTRIP="${ILINE//\\\"}"
+        # Remove all chars but remaining quotes:
+        LINESTRIP="${LINESTRIP//[^\"]}"
+    else
+        LINESTRIP="$(echo "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^\"],,g')"
+    fi
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
     ODD="$(($NUMQ%2))"
@@ -608,7 +616,7 @@ parse_value () {
             # Not a number or no normalization - process like default
             value="$token"
             if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
-                if [ -n "${BASH-}" ] ; then
+                if [ "$SHELL_TWOSLASH" = yes ] ; then
                     value="${value//\\\//\/}"
                 else
                     value="$(echo "$value" | $GSED 's#\\/#/#g')"
@@ -621,7 +629,7 @@ parse_value () {
     *) value="$token"
        # if asked, replace solidus ("\/") in json strings with normalized value: "/"
        if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
-            if [ -n "${BASH-}" ] ; then
+            if [ "$SHELL_TWOSLASH" = yes ] ; then
                 value="${value//\\\//\/}"
             else
                 value="$(echo "$value" | $GSED 's#\\/#/#g')"
