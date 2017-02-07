@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Copyright (C) 2014-2015 Dominic Tarr
-# Copyright (C) 2015 Eaton
+# Copyright (C) 2015-2017 Eaton
 #
 #! \file    JSON.sh
 #  \brief   A json parser written in bash
