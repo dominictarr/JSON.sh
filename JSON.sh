@@ -57,6 +57,12 @@
 # (e.g. double-brackets, local keyword, regex expressions...)
 # to either refuse running in a shell or pick an implementation
 # for certain code paths.
+
+SHELL_REGEX=no
+if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
+    SHELL_REGEX=yes
+fi
+
 false && \
 if [ -z "${BASH-}" ] && [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     # NOTE: This can break scripts which source this file and are not in bash
@@ -404,12 +410,20 @@ cook_a_string_arg() {
     [ -z "$1" ] && return 0
     # Strangely, for some OSes it does not suffice that all chars must be from
     # the first pattern - should explicitly test that some are not forbidden
-    # TODO: Bash-compatible regex support required for code below.
-    # May need to add support for other shells if this syntax
-    # is not supported there (e.g. revert to sed/grep/awk)...
-    if ! [[ "$1" =~ [\\\"] ]] >/dev/null && \
-         [[ "$1" =~ ^[A-Za-z0-9\ \-\.\+\/\@\:\;\!\%\,\&\(\)\{\}]*$ ]] >/dev/null \
-    ; then
+    IS_TRIVIAL=no
+    if [ "$SHELL_REGEX" = yes ]; then
+        # Bash-compatible regex support required for code below.
+        if ! [[ "$1" =~ [\\\"] ]] >/dev/null && \
+            [[ "$1" =~ ^[A-Za-z0-9\ \-\.\+\/\@\:\;\!\%\,\&\(\)\{\}]*$ ]] >/dev/null \
+        ; then IS_TRIVIAL=yes; fi
+    else
+        # Support for other shells if bash-regex syntax
+        # is not supported there (e.g. revert to sed/grep/awk)...
+        if [ -n "$(echo "$1" | $GEGREP -v '[\\\"]' | $GEGREP '^[A-Za-z0-9\ \-\.\+\/\@\:\;\!\%\,\&\(\)\{\}]*$' )" ] \
+        ; then IS_TRIVIAL=yes; fi
+    fi
+
+    if [ "$IS_TRIVIAL" = yes ] ; then
         print_debug $DEBUGLEVEL_PRINTTOKEN_PIPELINE "cook_a_string_arg(): input trivial, not cooking: '$1'"
         echo "$1"
         return 0
@@ -569,41 +583,48 @@ parse_value () {
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "token '$token' is a suspected number" >&2
        # TODO: Bash regex and more if's
-       if [ "$NORMALIZE_NUMBERS" = 1 ] && \
-         [[ "$token" =~ ${REGEX_NUMBER} ]] \
-       ; then
+       DO_NORMALIZE=no
+       if [ "$NORMALIZE_NUMBERS" = 1 ] ; then
+           if [ "$SHELL_REGEX" = yes ]; then
+                [[ "$token" =~ ${REGEX_NUMBER} ]] && DO_NORMALIZE=yes
+           else
+                [ -n "$(echo "$token" | $GEGREP "${REGEX_NUMBER}" )" ] && DO_NORMALIZE=yes
+           fi
+       fi
+
+       if [ "$DO_NORMALIZE" = yes ]; then
             value="$(printf "$NORMALIZE_NUMBERS_FORMAT" "$token")" || \
             value="$token"
             print_debug $DEBUGLEVEL_PRINTPATHVAL "normalized numeric token" \
                 "'$token' into '$value'" >&2
             if [ "$NORMALIZE_NUMBERS_STRIP" = 1 ]; then
-                local valuetmp="$(echo "$value" | $GSED -e 's,0*$,,g' -e 's,\.$,,' 2>/dev/null)" && \
-                value="$valuetmp"
+                valuetmp="$(echo "$value" | $GSED -e 's,0*$,,g' -e 's,\.$,,' 2>/dev/null)" && \
+                    value="$valuetmp"
                 unset valuetmp
                 print_debug $DEBUGLEVEL_PRINTPATHVAL "stripped numeric token" \
                     "'$token' into '$value'" >&2
             fi
        else
-        # Not a number or no normalization - process like default
+            # Not a number or no normalization - process like default
             value="$token"
             if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
                 if [ -n "${BASH-}" ] ; then
-                    value=${value//\\\//\/} ;
+                    value="${value//\\\//\/}"
                 else
-                    value=$(echo "$value" | sed 's#\\/#/#g')
+                    value="$(echo "$value" | $GSED 's#\\/#/#g')"
                 fi
             fi
        fi
        isleaf=1
        { [ "$value" = '""' ] || [ "$value" = '' ] ; } && isempty=1
        ;;
-    *) value=$token
+    *) value="$token"
        # if asked, replace solidus ("\/") in json strings with normalized value: "/"
        if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
             if [ -n "${BASH-}" ] ; then
-                value=${value//\\\//\/} ;
+                value="${value//\\\//\/}"
             else
-                value=$(echo "$value" | sed 's#\\/#/#g')
+                value="$(echo "$value" | $GSED 's#\\/#/#g')"
             fi
        fi
        isleaf=1
@@ -637,8 +658,12 @@ parse_value () {
     [ $PRUNE -eq 0 ] && print=5
 
   if [ "$print" -ne 0 ] && [ -n "$EXTRACT_JPATH" ] ; then
-    ### TODO: BASH regex matching:
-    [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=-1
+    if [ "$SHELL_REGEX" = yes ]; then
+        ### BASH regex matching:
+        [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=-1
+    else
+        [ -n "$(echo "${jpath}" | $GEGREP "${EXTRACT_JPATH}")" ] || print=-1
+    fi
   fi
 
   print_debug $DEBUGLEVEL_PRINTPATHVAL \
