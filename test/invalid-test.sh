@@ -22,6 +22,8 @@ do
     #this should be indented with '#' at the start.
     echo "OUTPUT WAS >>>"
     cat /tmp/JSON.sh_outlog
+    echo "ERRORS WAS >>>"
+    cat /tmp/JSON.sh_errlog
     echo "<<<"
     fails="$(expr $fails + 1)"
   else
