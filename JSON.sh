@@ -15,6 +15,9 @@
 #           Forked and further modified by Eaton / Jim Klimov
 #           https://github.com/jimklimov/JSON.sh
 #
+# NOTE: This script may be used standalone or sourced into your interpreter.
+# For the latter use-case it is recommended to pre-set JSONSH_SOURCED=yes
+#
 # The MIT License (MIT)
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -764,7 +767,9 @@ jsonsh_cli_subshell() (
 jsonsh_debugging_defaults
 
 # If not sourced into a bash script, parse stdin and quit
-if [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ]; \
+# TODO: non-bash shells?
+[ "${JSONSH_SOURCED-}" = yes ] || \
+if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ]; \
 then
   jsonsh_cli "$@"
   exit $?

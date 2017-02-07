@@ -56,6 +56,7 @@ for SHELL_PROG in $SHELL_PROGS ; do
     if [ -n "$SHELL_PROG" ] ; then
         if $SHELL_PROG -c "date" >/dev/null 2>&1 ; then : ; else
             echo "SKIP missing shell : $SHELL_PROG"
+            echo ""
             SKIP_SHELLS="$SKIP_SHELLS $SHELL_PROG"
             continue
         fi

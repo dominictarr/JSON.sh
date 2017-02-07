@@ -3,6 +3,7 @@
 cd "$(dirname "$0")"
 
 # Can't detect sourcing in sh, so immediately terminate the attempt to parse
+JSONSH_SOURCED=yes
 . ../JSON.sh </dev/null
 
 INPUT=./solidus/string_with_solidus.json
