@@ -2,6 +2,9 @@
 
 cd "$(dirname "$0")"
 
+# Can't detect sourcing in sh, so immediately terminate the attempt to parse
+. ../JSON.sh </dev/null
+
 # make test output TAP compatible
 # http://en.wikipedia.org/wiki/Test_Anything_Protocol
 
@@ -23,7 +26,7 @@ for DOC in \
  " \
 ; do
   i="$(expr $i + 1)"
-  if echo "$DOC" | ../JSON.sh
+  if echo "$DOC" | jsonsh_cli
   then
     echo "ok $i - empty input '$DOC' is okay in non-pedantic mode"
   else
@@ -32,7 +35,7 @@ for DOC in \
   fi
 
   i="$(expr $i + 1)"
-  if echo "$DOC" | ../JSON.sh -P
+  if echo "$DOC" | jsonsh_cli -P
   then
     echo "not ok $i - empty input '$DOC' should be rejected in pedantic mode"
     fails="$(expr $fails + 1)"

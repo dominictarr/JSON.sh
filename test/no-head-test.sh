@@ -1,6 +1,10 @@
 #!/bin/sh
 
 cd "$(dirname "$0")"
+
+# Can't detect sourcing in sh, so immediately terminate the attempt to parse
+. ../JSON.sh </dev/null
+
 [ -n "${tmp-}" ] || tmp="/tmp"
 
 # Avoid duplicate // in plain-shell syntax
@@ -19,7 +23,7 @@ do
   expected="${tmp}$(basename "$input" .json).no-head"
   egrep -v '^\[]' < "$(dirname "$input")/$(basename "$input" .json).parsed" > "$expected"
   i="$(expr $i + 1)"
-  if ! ../JSON.sh -n < "$input" | diff -u - "$expected"
+  if ! jsonsh_cli -n < "$input" | diff -u - "$expected"
   then
     echo "not ok $i - $input"
     fails="$(expr $fails + 1)"

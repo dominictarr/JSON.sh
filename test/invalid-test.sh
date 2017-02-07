@@ -2,6 +2,9 @@
 
 cd "$(dirname "$0")"
 
+# Can't detect sourcing in sh, so immediately terminate the attempt to parse
+. ../JSON.sh </dev/null
+
 # make test output TAP compatible
 # http://en.wikipedia.org/wiki/Test_Anything_Protocol
 
@@ -12,7 +15,7 @@ echo "1..${tests##* }"
 for input in invalid/*
 do
   i="$(expr $i + 1)"
-  if ../JSON.sh < "$input" > /tmp/JSON.sh_outlog 2> /tmp/JSON.sh_errlog
+  if jsonsh_cli < "$input" > /tmp/JSON.sh_outlog 2> /tmp/JSON.sh_errlog
   then
     echo "not ok $i - cat $input | ../JSON.sh should have failed"
     #this should be indented with '#' at the start.

@@ -11,6 +11,10 @@ for test in test/*.sh ;
 do
   tests="$(expr $tests + 1)"
   echo "TEST: $test"
+  # TODO: find a way to use the current shell-interpreter program to
+  # run sub-tests (simple sourcing fails ATM because scripts start
+  # with "cd `dirname $0`")...
+  #( . "./$test" )
   "./$test"
   ret=$?
   if [ $ret -eq 0 ] ; then

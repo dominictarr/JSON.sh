@@ -11,6 +11,9 @@ export LANG LC_ALL
 
 cd "$(dirname "$0")"
 
+# Can't detect sourcing in sh, so immediately terminate the attempt to parse
+. ../JSON.sh </dev/null
+
 fails=0
 passes=0
 skips=0
@@ -58,7 +61,7 @@ do
       if [ "$JSON_TEST_GENERATE" = yes ] || \
          [ "$JSON_TEST_GENERATE" = auto -a ! -s "$expected" ]
       then
-        if ! eval ../JSON.sh $OPTIONS < "$input" > "$expected"
+        if ! eval jsonsh_cli $OPTIONS < "$input" > "$expected"
         then
           echo "generation not ok $i - $input $EXT"
           fails="$(expr $fails + 1)"
@@ -71,7 +74,7 @@ do
         continue
       fi
 
-      if ! eval ../JSON.sh $OPTIONS < "$input" | diff -u - "$expected"
+      if ! eval jsonsh_cli $OPTIONS < "$input" | diff -u - "$expected"
       then
         echo "not ok $i - $input $EXT"
         fails="$(expr $fails + 1)"
