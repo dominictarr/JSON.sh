@@ -86,7 +86,7 @@ COOKASTRING_INPUT=""
 
 findbin() {
     # Locates a named binary or one from path, prints to stdout
-    local BIN
+    BIN=""
     for P in "$@" ; do case "$P" in
         /*) [ -x "$P" ] && BIN="$P" && break;;
         *) BIN="$(which "$P" 2>/dev/null | tail -1)" && [ -n "$BIN" ] && [ -x "$BIN" ] && break || BIN="";;
@@ -174,8 +174,8 @@ usage() {
 
 validate_debuglevel() {
     ### Beside command-line, debugging can be enabled by envvars from the caller
-    { [[ x"$DEBUG" = xy ]] || [[ x"$DEBUG" = xyes ]] ; } && DEBUG=1
-    [[ -n "$DEBUG" ]] && [[ "$DEBUG" -ge 0 ]] 2>/dev/null || DEBUG=0
+    { [ x"$DEBUG" = xy ] || [ x"$DEBUG" = xyes ] ; } && DEBUG=1
+    [ -n "$DEBUG" ] && [ "$DEBUG" -ge 0 ] 2>/dev/null || DEBUG=0
 }
 
 unquote() {
@@ -186,7 +186,7 @@ unquote() {
 
 ### Empty and non-numeric and non-positive values should be filtered out here
 is_positive() {
-    [[ -n "$1" ]] && [[ "$1" -gt 0 ]] 2>/dev/null
+    [ -n "$1" ] && [ "$1" -gt 0 ] 2>/dev/null
 }
 default_posval() {
     eval is_positive "\$$1" || eval "$1"="$2"
@@ -194,24 +194,24 @@ default_posval() {
 
 print_debug() {
     # Required params:
-    #   $1	Debug level of the message
-    #   $2..	The message to print to stderr (if $DEBUG>=$1)
-    local DL="$1"
+    #   $1    Debug level of the message
+    #   $2..  The message to print to stderr (if $DEBUG>=$1)
+    DL="$1"
     shift
-    [[ "$DEBUG" -ge "$DL" ]] 2>/dev/null && \
+    [ "$DEBUG" -ge "$DL" ] 2>/dev/null && \
         echo -E "[$$]DEBUG($DL): $@" >&2
     :
 }
 
 tee_stderr() {
     TEE_TAG="TEE_STDERR: "
-    [[ -n "$1" ]] && TEE_TAG="$1:"
-    [[ -n "$2" ]] && [[ "$2" -ge 0 ]] 2>/dev/null && \
+    [ -n "$1" ] && TEE_TAG="$1:"
+    [ -n "$2" ] && [ "$2" -ge 0 ] 2>/dev/null && \
         TEE_DEBUG="$2" || \
         TEE_DEBUG=$DEBUGLEVEL_PRINTTOKEN_PIPELINE
 
     ### If debug is not enabled, skip tee'ing quickly with little impact
-    [[ "$DEBUG" -lt "$TEE_DEBUG" ]] 2>/dev/null && cat || \
+    [ "$DEBUG" -lt "$TEE_DEBUG" ] 2>/dev/null && cat || \
     while IFS= read -r LINE; do
         echo -E "$LINE"
         print_debug "$TEE_DEBUG" "$TEE_TAG" "$LINE"
@@ -451,12 +451,13 @@ tokenize () {
   local SPACE='[[:space:]]+'
 
   # Force zsh to expand $A into multiple words
-  local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')
-  if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi
+  is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+  if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE$" | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
-  if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi
+  if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
+  unset is_wordsplit_disabled
 }
 
 parse_array () {
@@ -491,7 +492,7 @@ $value"
   if [ -n "$SORTDATA_ARR" ]; then
     ary="$(echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
   fi
-  [ "$BRIEF" = 0 ] && value=$(printf '[%s]' "$ary") || value=
+  [ "$BRIEF" = 0 ] && value="$(printf '[%s]' "$ary")" || value=""
   :
 }
 
@@ -520,8 +521,8 @@ parse_object () {
         print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(3):" "token='$token'"
         parse_value "$1" "$key"
         obj="$obj$key:$value"
-        if [[ -n "$SORTDATA_OBJ" ]]; then
-            [[ -z "$objml" ]] && objml="$key:$value" || objml="$objml
+        if [ -n "$SORTDATA_OBJ" ]; then
+            [ -z "$objml" ] && objml="$key:$value" || objml="$objml
 $key:$value"
         fi
         read -r token
@@ -539,7 +540,7 @@ $key:$value"
   if [ -n "$SORTDATA_OBJ" ]; then
     obj="$(echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
   fi
-  [ "$BRIEF" = 0 ] && value=$(printf '{%s}' "$obj") || value=
+  [ "$BRIEF" = 0 ] && value="$(printf '{%s}' "$obj")" || value=""
   :
 }
 
@@ -548,10 +549,10 @@ parse_value () {
   local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
     '{') parse_object "$jpath"
-       [[ "$value" = '{}' ]] && isempty=1
+       [ "$value" = '{}' ] && isempty=1
        ;;
     '[') parse_array  "$jpath"
-       [[ "$value" = '[]' ]] && isempty=1
+       [ "$value" = '[]' ] && isempty=1
        ;;
     # At this point, the only valid single-character tokens are digits.
     ''|[!0-9]) if [ "$ALLOWEMPTYINPUT" = 1 ] && [ -z "$jpath" ] && [ -z "$token" ]; then
@@ -565,7 +566,7 @@ parse_value () {
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "token '$token' is a suspected number" >&2
        # TODO: Bash regex and more if's
-       if [[ "$NORMALIZE_NUMBERS" = 1 ]] && \
+       if [ "$NORMALIZE_NUMBERS" = 1 ] && \
          [[ "$token" =~ ${REGEX_NUMBER} ]] \
        ; then
             value="$(printf "$NORMALIZE_NUMBERS_FORMAT" "$token")" || \
@@ -706,9 +707,9 @@ jsonsh_debugging_report() {
     [ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ] && \
         echo "[$$]DEBUG: Merge stderr and stdout for easier tracing with less" \
         "(DEBUGLEVEL_MERGE_ERROUT=$DEBUGLEVEL_MERGE_ERROUT)" >&2
-    [ "$DEBUG" -gt 0 ]] && \
+    [ "$DEBUG" -gt 0 ] && \
         echo "[$$]DEBUG: Enabled (debugging level $DEBUG)" >&2
-    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTPATHVAL" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTPATHVAL" ] && \
         echo "[$$]DEBUG: Enabled tracing of path:value printing decisions" \
         "(DEBUGLEVEL_PRINTPATHVAL=$DEBUGLEVEL_PRINTPATHVAL)" >&2
     [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ] && \
@@ -736,7 +737,7 @@ jsonsh_cli() {
   parse_options "$@"
   jsonsh_debugging_setup
   jsonsh_debugging_report
-  if [[ "$COOKASTRING" -eq 2 ]]; then
+  if [ "$COOKASTRING" -eq 2 ]; then
     if [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ] || \
        [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ] ; then
         echo "[$$]DEBUG: Cooking an argument into JSON string and exiting:" "$1" >&2
