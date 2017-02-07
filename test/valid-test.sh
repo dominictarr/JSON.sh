@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#!/bin/sh
 
 # NOTE: Developer of a new feature can pre-create expected result files:
 #   JSON_TEST_GENERATE=auto     conditionally (don't replace nonempty files)
@@ -25,7 +25,7 @@ CHOMPEXT='\.\(parsed\|sorted\|numnormalized\|normalized\|json\).*$'
 
 tests="`echo "$FILES" | wc -l`"
 ### We currently have up to 8 extensions to consider per test
-tests=$(($tests*8))
+tests="$(expr $tests * 8)"
 echo "1..$tests"
 
 for input in $FILES
@@ -36,13 +36,13 @@ do
   ; do
     if [ ! -f "$input" ]; then
       echo "error - missing input file '$input', assuming all its tests failed"
-      fails=$(($fails+8))
+      fails=$(expr $fails+8)
       break
     fi
 
     expected="${input%.json}.$EXT"
     if [ -f "$expected" -o -n "$JSON_TEST_GENERATE" ]; then
-      i=$((i+1))
+      i=$(expr $i + 1)
       case "$EXT" in
         sorted) OPTIONS="-S='-n -r'" ;;
         normalized) OPTIONS="-N" ;;
@@ -63,8 +63,8 @@ do
           mv -f "$expected" "$expected.failed"
         else
           echo "generation ok $i - $input $EXT"
-          passes=$(($passes+1))
-          generated=$(($generated+1))
+          passes=$(expr $passes + 1)
+          generated=$(expr $generated + 1)
         fi
         continue
       fi
@@ -72,14 +72,14 @@ do
       if ! eval ../JSON.sh $OPTIONS < "$input" | diff -u - "$expected" 
       then
         echo "not ok $i - $input $EXT"
-        fails=$((fails+1))
+        fails=$(expr $fails + 1)
       else
         echo "ok $i - $input $EXT"
-        passes=$(($passes+1))
+        passes=$(expr $passes + 1)
       fi
     else
       # echo "skip (missing result file) - $input $EXT"
-      skips=$(($skips+1))
+      skips=$(expr $skips + 1)
     fi
   done
 done

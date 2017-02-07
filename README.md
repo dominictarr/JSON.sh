@@ -1,6 +1,8 @@
 # JSON.sh
 
-Yo, so it's a JSON parser written in bash!
+yo, so it's a json parser written in shell, compatible with ash, bash, dash and zsh
+
+[![travis](https://secure.travis-ci.org/dominictarr/JSON.sh.png?branch=master)](https://travis-ci.org/dominictarr/JSON.sh)
 
 Pipe JSON to it, and it traverses the json objects and prints out the 
 path to the current object (as a JSON array) and then the object,
@@ -19,7 +21,7 @@ A simple example follows here, and more complex ones are presented
 after the break for command-line options:
 
 ``` bash
-$ ./JSON.sh < package.json
+$ json_parse < package.json
 ["name"]  "JSON.sh"
 ["version"]  "0.0.0"
 ["description"]  ""
@@ -73,6 +75,9 @@ Usage: JSON.sh [-b] [-l] [-p] [-x 'regex'] [-S|-S='args'] [--no-newline] [-d]
 
 * `-p`
 > Prune empty. Exclude fields with empty values (strings, arrays, objects).
+
+* `-n`
+> No-head. Don't show nodes that have no path. Normally these output a leading '[]', which you can't use in a bash array.
 
 * `-s`
 > Remove escaping of the solidus symbol (stright slash).
@@ -564,9 +569,10 @@ The Illumos Project\tSunOS 5.11\tillumos-ad69a33\tJanuary 2015
 
 ## Installation
 
-install via npm or from AUR on archlinux
+Install with npm, pip or from AUR on Archlinux:
 
 * `npm install -g JSON.sh`
+* `pip install git+https://github.com/dominictarr/JSON.sh#egg=JSON.sh`
 * `yaourt -Sy json-sh`
   ([json-sh on aur](https://aur.archlinux.org/packages/json-sh/)
   thanks to [kremlin-](https://github.com/kremlin-))

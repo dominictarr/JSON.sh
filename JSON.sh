@@ -1,14 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Copyright (C) 2014-2015 Dominic Tarr
 # Copyright (C) 2015-2017 Eaton
 #
 #! \file    JSON.sh
-#  \brief   A json parser written in bash
+#  \brief   A json parser written in shell-script
 #  \author  Dominic Tarr <https://github.com/dominictarr>
+#  \author  "aidanhs" <https://github.com/aidanhs> added
 #  \author  Jim Klimov <EvgenyKlimov@Eaton.com>
 #  \details Based on Dominic Tarr JSON.sh
 #           https://github.com/dominictarr/JSON.sh/blob/master/JSON.sh
+#           including "aidanhs" added support beyond bash -
+#           for ash/dash/zsh shells and busybox shell,
 #           Forked and further modified by Eaton / Jim Klimov
 #           https://github.com/jimklimov/JSON.sh
 #
@@ -45,14 +48,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -z "${BASH-}" ] ; then
+# NOTE: The script code requires a shell with support for "local"
+# keyword; this includes not only BASH but some more nowadays.
+# TODO: Add a way to detect supported shell interpreter features
+# (e.g. double-brackets, local keyword, regex expressions...)
+# to either refuse running in a shell or pick an implementation
+# for certain code paths.
+false && \
+if [ -z "${BASH-}" ] && [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     # NOTE: This can break scripts which source this file and are not in bash
-    echo "ERROR: JSON.sh requires to be run with BASH interpreter! Subshelling..." >&2
+    echo "ERROR: JSON.sh requires to be run with BASH/ZSH/ASH/DASH interpreter! Subshelling..." >&2
     /usr/bin/bash "$0" "$@"
     exit $?
 fi
 
-throw () {
+throw() {
   echo "$*" >&2
   exit 1
 }
@@ -60,6 +70,7 @@ throw () {
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+NO_HEAD=0
 ALLOWEMPTYINPUT=1
 NORMALIZE_SOLIDUS=0
 SORTDATA_OBJ=""
@@ -77,34 +88,34 @@ findbin() {
     # Locates a named binary or one from path, prints to stdout
     local BIN
     for P in "$@" ; do case "$P" in
-        /*) [[ -x "$P" ]] && BIN="$P" && break;;
-        *) BIN="`which "$P" 2>/dev/null | tail -1`" && [[ -n "$BIN" ]] && [[ -x "$BIN" ]] && break || BIN="";;
+        /*) [ -x "$P" ] && BIN="$P" && break;;
+        *) BIN="$(which "$P" 2>/dev/null | tail -1)" && [ -n "$BIN" ] && [ -x "$BIN" ] && break || BIN="";;
     esac; done
-    [[ -n "$BIN" ]] && [[ -x "$BIN" ]] && echo "$BIN" && return 0
+    [ -n "$BIN" ] && [ -x "$BIN" ] && echo "$BIN" && return 0
     return 1
 }
 
 # May be passed by caller; also may pass AWK_OPTS *for it* then
-[[ -z "$AWK" ]] && AWK_OPTS="" && \
-    AWK="`findbin /usr/xpg4/bin/awk gawk nawk oawk awk`"
+[ -z "$AWK" ] && AWK_OPTS="" && \
+    AWK="$(findbin /usr/xpg4/bin/awk gawk nawk oawk awk)"
 # Error-checked in one optional place it may be needed
 
 # Different OSes have different greps... we like a GNU one
-[[ -z "$GGREP" ]] && \
-    GGREP="`findbin /{usr,opt}/{gnu,sfw}/bin/grep ggrep /usr/xpg4/bin/grep grep`"
-[[ -n "$GGREP" ]] && [[ -x "$GGREP" ]] || throw "No GNU GREP was found!"
+[ -z "$GGREP" ] && \
+    GGREP="$(findbin /{usr,opt}/{gnu,sfw}/bin/grep ggrep /usr/xpg4/bin/grep grep)"
+[ -n "$GGREP" ] && [ -x "$GGREP" ] || throw "No GNU GREP was found!"
 
-[[ -z "$GEGREP" ]] && \
-    GEGREP="`findbin /{usr,opt}/{gnu,sfw}/bin/egrep gegrep /usr/xpg4/bin/egrep egrep`"
-[[ -n "$GEGREP" ]] && [[ -x "$GEGREP" ]] || throw "No GNU EGREP was found!"
+[ -z "$GEGREP" ] && \
+    GEGREP="$(findbin /{usr,opt}/{gnu,sfw}/bin/egrep gegrep /usr/xpg4/bin/egrep egrep)"
+[ -n "$GEGREP" ] && [ -x "$GEGREP" ] || throw "No GNU EGREP was found!"
 
-[[ -z "$GSORT" ]] && \
-    GSORT="`findbin /{usr,opt}/{gnu,sfw}/bin/sort gsort sort /usr/xpg4/bin/sort`"
-[[ -n "$GSORT" ]] && [[ -x "$GSORT" ]] || throw "No GNU SORT was found!"
+[ -z "$GSORT" ] && \
+    GSORT="$(findbin /{usr,opt}/{gnu,sfw}/bin/sort gsort sort /usr/xpg4/bin/sort)"
+[ -n "$GSORT" ] && [ -x "$GSORT" ] || throw "No GNU SORT was found!"
 
-[[ -z "$GSED" ]] && \
-    GSED="`findbin /{usr,opt}/{gnu,sfw}/bin/sed /usr/xpg4/bin/sed gsed sed`"
-[[ -n "$GSED" ]] && [[ -x "$GSED" ]] || throw "No GNU SED was found!"
+[ -z "$GSED" ] && \
+    GSED="$(findbin /{usr,opt}/{gnu,sfw}/bin/sed /usr/xpg4/bin/sed gsed sed)"
+[ -n "$GSED" ] && [ -x "$GSED" ] || throw "No GNU SED was found!"
 
 usage() {
   echo
@@ -118,7 +129,8 @@ usage() {
   echo "-P - Pedantic mode, forbids acception of empty input documents."
   echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
   echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
-  echo "-s - Remove escaping of the solidus symbol (stright slash)."
+  echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
+  echo "-s - Remove escaping of the solidus symbol (straight slash)."
   echo "-x 'regex' - rather than showing all document from the root element,"
   echo "     extract the items rooted at path(s) matching the regex (see the"
   echo "     comma-separated list of nested hierarchy names in general output,"
@@ -153,9 +165,9 @@ usage() {
   echo "To help JSON-related scripting, with '-Q' an input plaintext can be cooked"
   echo "into a string valid for JSON (backslashes, quotes and newlines escaped,"
   echo "with no trailing newline); after cooking, the script exits:"
-  echo '       COOKEDSTRING="`somecommand 2>&1 | JSON.sh -Q`"'
+  echo '       COOKEDSTRING="$(somecommand 2>&1 | JSON.sh -Q)"'
   echo "A '-QQ' mode also exists to cook a (single) command-line argument:"
-  echo '       COOKEDSTRING="`JSON.sh -QQ "$SAVED_INPUT"`"'
+  echo '       COOKEDSTRING="$(JSON.sh -QQ "$SAVED_INPUT")"'
   echo "This can also be used to pack JSON in JSON. Note that '-QQ' ignores stdin."
   echo
 }
@@ -210,7 +222,7 @@ tee_stderr() {
 parse_options() {
   set -- "$@"
   local ARGN=$#
-  while [[ $ARGN -ne 0 ]]
+  while [ "$ARGN" -ne 0 ]
   do
     case "$1" in
       -h) usage
@@ -226,31 +238,33 @@ parse_options() {
       ;;
       -P) ALLOWEMPTYINPUT=0
       ;;
+      -n) NO_HEAD=1
+      ;;
       -s) NORMALIZE_SOLIDUS=1
       ;;
       -N) NORMALIZE=1
       ;;
       -N=*) NORMALIZE=1
-          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-N=,,' 2>/dev/null | unquote `"
-          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-N=,,' 2>/dev/null | unquote `"
+          SORTDATA_OBJ="$GSORT $(echo "$1" | $GSED 's,^-N=,,' 2>/dev/null | unquote )"
+          SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-N=,,' 2>/dev/null | unquote )"
       ;;
       -No=*) NORMALIZE=1
-          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-No=,,' 2>/dev/null | unquote `"
+          SORTDATA_OBJ="$GSORT $(echo "$1" | $GSED 's,^-No=,,' 2>/dev/null | unquote )"
       ;;
       -Na=*) NORMALIZE=1
-          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-Na=,,' 2>/dev/null | unquote `"
+          SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-Na=,,' 2>/dev/null | unquote )"
       ;;
       -Nnx) NORMALIZE_NUMBERS_STRIP=1
             NORMALIZE_NUMBERS=1
       ;;
       -Nnx=*) NORMALIZE_NUMBERS_STRIP=1
             NORMALIZE_NUMBERS=1
-            NORMALIZE_NUMBERS_FORMAT="`echo "$1" | $GSED 's,^-Nnx=,,' 2>/dev/null | unquote `"
+            NORMALIZE_NUMBERS_FORMAT="$(echo "$1" | $GSED 's,^-Nnx=,,' 2>/dev/null | unquote )"
       ;;
       -Nn) NORMALIZE_NUMBERS=1
       ;;
       -Nn=*) NORMALIZE_NUMBERS=1
-          NORMALIZE_NUMBERS_FORMAT="`echo "$1" | $GSED 's,^-Nn=,,' 2>/dev/null | unquote `"
+          NORMALIZE_NUMBERS_FORMAT="$(echo "$1" | $GSED 's,^-Nn=,,' 2>/dev/null | unquote )"
       ;;
       -S) SORTDATA_OBJ="$GSORT"
           SORTDATA_ARR="$GSORT"
@@ -260,28 +274,28 @@ parse_options() {
       -Sa) SORTDATA_ARR="$GSORT"
       ;;
       -S=*)
-          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-S=,,' 2>/dev/null | unquote `"
-          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-S=,,' 2>/dev/null | unquote `"
+          SORTDATA_OBJ="$GSORT $(echo "$1" | $GSED 's,^-S=,,' 2>/dev/null | unquote )"
+          SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-S=,,' 2>/dev/null | unquote )"
       ;;
       -So=*)
-          SORTDATA_OBJ="$GSORT `echo "$1" | $GSED 's,^-So=,,' 2>/dev/null | unquote `"
+          SORTDATA_OBJ="$GSORT $(echo "$1" | $GSED 's,^-So=,,' 2>/dev/null | unquote )"
       ;;
       -Sa=*)
-          SORTDATA_ARR="$GSORT `echo "$1" | $GSED 's,^-Sa=,,' 2>/dev/null | unquote `"
+          SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-Sa=,,' 2>/dev/null | unquote )"
       ;;
       -x) EXTRACT_JPATH="$2"
           shift
       ;;
-      -x=*) EXTRACT_JPATH="`echo "$1" | $GSED 's,^-x=,,' 2>/dev/null`"
+      -x=*) EXTRACT_JPATH="$(echo "$1" | $GSED 's,^-x=,,' 2>/dev/null)"
       ;;
       --no-newline)
           TOXIC_NEWLINE=1
       ;;
-      -d) DEBUG=$(($DEBUG+1))
+      -d) DEBUG="$(expr $DEBUG + 1)"
           JSONSH_DEBUGGING_SETUP=notdone
           JSONSH_DEBUGGING_REPORT=notdone
       ;;
-      -d=*) DEBUG="`echo "$1" | $GSED 's,^-d=,,' 2>/dev/null`"
+      -d=*) DEBUG="$(echo "$1" | $GSED 's,^-d=,,' 2>/dev/null)"
           JSONSH_DEBUGGING_SETUP=notdone
           JSONSH_DEBUGGING_REPORT=notdone
       ;;
@@ -291,7 +305,7 @@ parse_options() {
           COOKASTRING_INPUT="$2"
           shift
       ;;
-      ?*) echo "ERROR: Unknown option '$1'."
+      ?*) echo "ERROR: Unknown option: '$1'."
           usage
           exit 0
       ;;
@@ -303,23 +317,23 @@ parse_options() {
   validate_debuglevel
 
   # For normalized data, we do the whole job and just return the top object
-  [[ "$NORMALIZE" -eq 1 ]] && BRIEF=0 && LEAFONLY=0 && PRUNE=0
+  [ "$NORMALIZE" = 1 ] && BRIEF=0 && LEAFONLY=0 && PRUNE=0
 }
 
 awk_egrep () {
   local pattern_string=$1
 
-  [[ -z "$AWK" ]] && throw "No AWK found!"
-  [[ ! -x "$AWK" ]] && throw "Not executable AWK='$AWK'!"
+  [ -z "${AWK-}" ] && throw "No AWK found!"
+  [ ! -x "$AWK" ] && throw "Not executable AWK='$AWK'!"
 
-  ${AWK} $AWK_OPTS '{
+  "${AWK}" $AWK_OPTS '{
     while ($0) {
       start=match($0, pattern);
       token=substr($0, start, RLENGTH);
       print token;
       $0=substr($0, start+RLENGTH);
     }
-  }' pattern=$pattern_string
+  }' pattern="$pattern_string"
 }
 
 strip_newlines() {
@@ -342,10 +356,10 @@ strip_newlines() {
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
     ODD="$(($NUMQ%2))"
-    LINENUM="$(($LINENUM+1))"
+    LINENUM="$(expr $LINENUM + 1)"
 
-    if [[ "$ODD" -eq 1 ]] && [[ "$INSTRING" -eq 0 ]]; then
-      [[ "$TOXIC_NEWLINE" = 1 ]] && \
+    if [ "$ODD" -eq 1 ] && [ "$INSTRING" -eq 0 ]; then
+      [ "$TOXIC_NEWLINE" = 1 ] && \
         echo "ERROR: Invalid JSON markup detected: newline in a string value: at line #$LINENUM" >&2 && \
         exit 121
       printf '%s\\n' "$ILINE"
@@ -353,18 +367,18 @@ strip_newlines() {
       continue
     fi
 
-    if [[ "$ODD" -eq 1 ]] && [[ "$INSTRING" -eq 1 ]]; then
+    if [ "$ODD" -eq 1 ] && [ "$INSTRING" -eq 1 ]; then
       printf '%s\n' "$ILINE"
       INSTRING=0
       continue
     fi
 
-    if [[ "$ODD" -eq 0 ]] && [[ "$INSTRING" -eq 1 ]]; then
+    if [ "$ODD" -eq 0 ] && [ "$INSTRING" -eq 1 ]; then
       printf '%s\\n' "$ILINE"
       continue
     fi
 
-    if [[ "$ODD" -eq 0 ]] && [[ "$INSTRING" -eq 0 ]]; then
+    if [ "$ODD" -eq 0 ] && [ "$INSTRING" -eq 0 ]; then
       printf '%s\n' "$ILINE"
       continue
     fi
@@ -377,16 +391,19 @@ cook_a_string() {
     $GGREP '' | $GSED -e 's,\\,\\\\,g' -e 's,\",\\",g' -e 's,\t,\\t,g' 2>/dev/null | \
     { FIRST=''; while IFS="" read -r ILINE; do
       printf '%s%s' "$FIRST" "$ILINE"
-      [[ -z "$FIRST" ]] && FIRST='\n'
+      [ -n "$FIRST" ] || FIRST='\n'
       done; }
     :
 }
 
 cook_a_string_arg() {
     # Use routine above to cook a string passed as "$1" unless it is trivial
-    [[ -z "$1" ]] && return 0
+    [ -z "$1" ] && return 0
     # Strangely, for some OSes it does not suffice that all chars must be from
     # the first pattern - should explicitly test that some are not forbidden
+    # TODO: Bash-compatible regex support required for code below.
+    # May need to add support for other shells if this syntax
+    # is not supported there (e.g. revert to sed/grep/awk)...
     if ! [[ "$1" =~ [\\\"] ]] >/dev/null && \
          [[ "$1" =~ ^[A-Za-z0-9\ \-\.\+\/\@\:\;\!\%\,\&\(\)\{\}]*$ ]] >/dev/null \
     ; then
@@ -404,18 +421,18 @@ tokenize () {
   local ESCAPE
   local CHAR
 
-  if echo "test string" | $GEGREP -ao --color=never "test" >/dev/null 2>/dev/null
+  if echo "test string" | $GEGREP -ao --color=never "test" >/dev/null 2>&1
   then
     GREP_O="$GEGREP -ao --color=never"
-  elif echo "test string" | $GEGREP -ao "test" >/dev/null 2>/dev/null
+  elif echo "test string" | $GEGREP -ao "test" >/dev/null 2>&1
   then
     GREP_O="$GEGREP -ao"
-  elif echo "test string" | $GEGREP -o "test" >/dev/null 2>/dev/null
+  elif echo "test string" | $GEGREP -o "test" >/dev/null 2>&1
   then
     GREP_O="$GEGREP -o"
   fi
 
-  if [[ -n "$GREP_O" ]] && echo "test string" | $GREP_O "test" >/dev/null
+  if [ -n "$GREP_O" ] && echo "test string" | $GREP_O "test" >/dev/null 2>&1
   then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\]'
@@ -433,9 +450,13 @@ tokenize () {
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
+  # Force zsh to expand $A into multiple words
+  local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')
+  if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE$" | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
+  if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi
 }
 
 parse_array () {
@@ -452,12 +473,11 @@ parse_array () {
         parse_value "$1" "$index"
         index=$((index+1))
         ary="$ary""$value"
-        if [[ -n "$SORTDATA_ARR" ]]; then
-            [[ -z "$aryml" ]] && aryml="$value" || aryml="$aryml
+        if [ -n "$SORTDATA_ARR" ]; then
+            [ -z "$aryml" ] && aryml="$value" || aryml="$aryml
 $value"
         fi
         read -r token
-        print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(2):" "token='$token'"
         case "$token" in
           ']') break ;;
           ',') ary="$ary," ;;
@@ -468,10 +488,10 @@ $value"
       done
       ;;
   esac
-  if [[ -n "$SORTDATA_ARR" ]]; then
-    ary="`echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null`"
+  if [ -n "$SORTDATA_ARR" ]; then
+    ary="$(echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
   fi
-  [[ "$BRIEF" -eq 0 ]] && value=`printf '[%s]' "$ary"` || value=
+  [ "$BRIEF" = 0 ] && value=$(printf '[%s]' "$ary") || value=
   :
 }
 
@@ -516,10 +536,10 @@ $key:$value"
       done
     ;;
   esac
-  if [[ -n "$SORTDATA_OBJ" ]]; then
-    obj="`echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null`"
+  if [ -n "$SORTDATA_OBJ" ]; then
+    obj="$(echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
   fi
-  [[ "$BRIEF" -eq 0 ]] && value=`printf '{%s}' "$obj"` || value=
+  [ "$BRIEF" = 0 ] && value=$(printf '{%s}' "$obj") || value=
   :
 }
 
@@ -534,7 +554,7 @@ parse_value () {
        [[ "$value" = '[]' ]] && isempty=1
        ;;
     # At this point, the only valid single-character tokens are digits.
-    ''|[!0-9]) if [[ "$ALLOWEMPTYINPUT" = 1 ]] && [[ -z "$jpath" ]] && [[ -z "$token" ]]; then
+    ''|[!0-9]) if [ "$ALLOWEMPTYINPUT" = 1 ] && [ -z "$jpath" ] && [ -z "$token" ]; then
             print_debug $DEBUGLEVEL_PRINTPATHVAL \
                 'Got a NULL document as input (no jpath, no token)' >&2
             value='{}'
@@ -544,15 +564,16 @@ parse_value () {
     +*|-*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "token '$token' is a suspected number" >&2
+       # TODO: Bash regex and more if's
        if [[ "$NORMALIZE_NUMBERS" = 1 ]] && \
          [[ "$token" =~ ${REGEX_NUMBER} ]] \
        ; then
-            value="`printf "$NORMALIZE_NUMBERS_FORMAT" "$token"`" || \
-            value=$token
+            value="$(printf "$NORMALIZE_NUMBERS_FORMAT" "$token")" || \
+            value="$token"
             print_debug $DEBUGLEVEL_PRINTPATHVAL "normalized numeric token" \
                 "'$token' into '$value'" >&2
-            if [[ "$NORMALIZE_NUMBERS_STRIP" = 1 ]]; then
-                local valuetmp="`echo "$value" | $GSED -e 's,0*$,,g' -e 's,\.$,,' 2>/dev/null`" && \
+            if [ "$NORMALIZE_NUMBERS_STRIP" = 1 ]; then
+                local valuetmp="$(echo "$value" | $GSED -e 's,0*$,,g' -e 's,\.$,,' 2>/dev/null)" && \
                 value="$valuetmp"
                 unset valuetmp
                 print_debug $DEBUGLEVEL_PRINTPATHVAL "stripped numeric token" \
@@ -560,23 +581,35 @@ parse_value () {
             fi
        else
         # Not a number or no normalization - process like default
-            value=$token
-            [[ "$NORMALIZE_SOLIDUS" -eq 1 ]] && value=${value//\\\//\/}
+            value="$token"
+            if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
+                if [ -n "${BASH-}" ] ; then
+                    value=${value//\\\//\/} ;
+                else
+                    value=$(echo "$value" | sed 's#\\/#/#g')
+                fi
+            fi
        fi
        isleaf=1
-       { [[ "$value" = '""' ]] || [[ "$value" = '' ]] ; } && isempty=1
+       { [ "$value" = '""' ] || [ "$value" = '' ] ; } && isempty=1
        ;;
     *) value=$token
        # if asked, replace solidus ("\/") in json strings with normalized value: "/"
-       [[ "$NORMALIZE_SOLIDUS" -eq 1 ]] && value=${value//\\\//\/}
+       if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
+            if [ -n "${BASH-}" ] ; then
+                value=${value//\\\//\/} ;
+            else
+                value=$(echo "$value" | sed 's#\\/#/#g')
+            fi
+       fi
        isleaf=1
-       [[ "$value" = '""' ]] && isempty=1
+       [ "$value" = '""' ] && isempty=1
        ;;
   esac
 
-  if [[ "$NORMALIZE" -eq 1 ]]; then
+  if [ "$NORMALIZE" = 1 ]; then
     # Ensure a "true" output from the "if" for "return"
-    if [[ "$jpath" != '' ]]; then : ; else
+    if [ "$jpath" != '' ]; then : ; else
         print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "Non-root keys were skipped due to normalization mode"
         printf "%s\n" "$value"
@@ -585,20 +618,22 @@ parse_value () {
   fi
 
   ### Skip printing larger objects in brief mode
-  [[ "$value" = '' ]] && return
+  [ "$value" = '' ] && return
+  [ "$NO_HEAD" -eq 1 ] && [ -z "$jpath" ] && return
 
-  [[ "$LEAFONLY" -eq 0 ]] && [[ "$PRUNE" -eq 0 ]] && print=1
-  [[ "$LEAFONLY" -eq 1 ]] && [[ "$isleaf" -eq 1 ]] && [[ $PRUNE -eq 0 ]] && print=2
-  [[ "$LEAFONLY" -eq 0 ]] && [[ "$PRUNE" -eq 1 ]] && [[ "$isempty" -eq 0 ]] && print=3
-  [[ "$LEAFONLY" -eq 1 ]] && [[ "$isleaf" -eq 1 ]] && \
-    [[ $PRUNE -eq 1 ]] && [[ $isempty -eq 0 ]] && print=4
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=2
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=3
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
+    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=4
+
   ### A special case of an empty array or object - for leaf printing
   ### without pruning, we are interested in these:
-  [[ "$LEAFONLY" -eq 1 ]] && [[ "$isleaf" -eq 0 ]] && [[ "$isempty" -eq 1 ]] && \
-    [[ $PRUNE -eq 0 ]] && print=5
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 0 ] && [ "$isempty" -eq 1 ] && \
+    [ $PRUNE -eq 0 ] && print=5
 
-  if [[ "$print" -ne 0 ]] && [[ -n "$EXTRACT_JPATH" ]] ; then
-    ### BASH regex matching:
+  if [ "$print" -ne 0 ] && [ -n "$EXTRACT_JPATH" ] ; then
+    ### TODO: BASH regex matching:
     [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=-1
   fi
 
@@ -607,7 +642,7 @@ parse_value () {
 	"isleaf='$isleaf'/L='$LEAFONLY' isempty='$isempty'/P='$PRUNE':" \
 	"print='$print'" >&2
 
-  [[ "$print" -gt 0 ]] && printf "[%s]\t%s\n" "$jpath" "$value"
+  [ "$print" -gt 0 ] && printf "[%s]\t%s\n" "$jpath" "$value"
   :
 }
 
@@ -625,7 +660,7 @@ parse () {
 
 smart_parse() {
   strip_newlines | \
-  tokenize | if [[ -n "$SORTDATA_OBJ$SORTDATA_ARR" ]] ; then
+  tokenize | if [ -n "$SORTDATA_OBJ$SORTDATA_ARR" ] ; then
       ### Any type of sort was enabled
       ( NORMALIZE=1 LEAFONLY=0 BRIEF=0 parse ) \
       | tokenize | parse
@@ -638,7 +673,7 @@ JSONSH_DEBUGGING_SETUP=notdone
 JSONSH_DEBUGGING_REPORT=notdone
 JSONSH_DEBUGGING_DEFAULTS=notdone
 jsonsh_debugging_defaults() {
-    [[ x"$JSONSH_DEBUGGING_DEFAULTS" = xdone ]] && return 0
+    [ x"$JSONSH_DEBUGGING_DEFAULTS" = xdone ] && return 0
     ### Caller can disable specific debuggers by setting their level too high
     validate_debuglevel
     default_posval DEBUGLEVEL_PRINTPATHVAL		1
@@ -651,41 +686,41 @@ jsonsh_debugging_defaults() {
 }
 
 jsonsh_debugging_setup() {
-    [[ x"$JSONSH_DEBUGGING_SETUP" = xdone ]] && return 0
+    [ x"$JSONSH_DEBUGGING_SETUP" = xdone ] && return 0
     # Note that the CLI options enable some debug level
 
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ] && \
         exec 2>&1
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ] && \
         set +v
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ] && \
         set -x
 
     JSONSH_DEBUGGING_SETUP="done"
 }
 
 jsonsh_debugging_report() {
-    [[ x"$JSONSH_DEBUGGING_REPORT" = xdone ]] && return 0
+    [ x"$JSONSH_DEBUGGING_REPORT" = xdone ] && return 0
     # Note that the CLI options enable some debug level
 
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_MERGE_ERROUT" ] && \
         echo "[$$]DEBUG: Merge stderr and stdout for easier tracing with less" \
         "(DEBUGLEVEL_MERGE_ERROUT=$DEBUGLEVEL_MERGE_ERROUT)" >&2
-    [[ "$DEBUG" -gt 0 ]] && \
+    [ "$DEBUG" -gt 0 ]] && \
         echo "[$$]DEBUG: Enabled (debugging level $DEBUG)" >&2
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTPATHVAL" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTPATHVAL" ]] && \
         echo "[$$]DEBUG: Enabled tracing of path:value printing decisions" \
         "(DEBUGLEVEL_PRINTPATHVAL=$DEBUGLEVEL_PRINTPATHVAL)" >&2
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ] && \
         echo "[$$]DEBUG: Enabled printing of each processed token" \
         "(DEBUGLEVEL_PRINTTOKEN=$DEBUGLEVEL_PRINTTOKEN)" >&2
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ] && \
         echo "[$$]DEBUG: Enabled tracing of read-in token conversions" \
         "(DEBUGLEVEL_PRINTTOKEN_PIPELINE=$DEBUGLEVEL_PRINTTOKEN_PIPELINE)" >&2
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_V" ] && \
         echo "[$$]DEBUG: Enable execution tracing (-v)" \
         "(DEBUGLEVEL_TRACE_V=$DEBUGLEVEL_TRACE_V)" >&2
-    [[ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ]] && \
+    [ "$DEBUG" -ge "$DEBUGLEVEL_TRACE_X" ] && \
         echo "[$$]DEBUG: Enable execution tracing (-x)" \
         "(DEBUGLEVEL_TRACE_X=$DEBUGLEVEL_TRACE_X)" >&2
 
@@ -702,8 +737,8 @@ jsonsh_cli() {
   jsonsh_debugging_setup
   jsonsh_debugging_report
   if [[ "$COOKASTRING" -eq 2 ]]; then
-    if [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ]] || \
-       [[ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ]] ; then
+    if [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN" ] || \
+       [ "$DEBUG" -ge "$DEBUGLEVEL_PRINTTOKEN_PIPELINE" ] ; then
         echo "[$$]DEBUG: Cooking an argument into JSON string and exiting:" "$1" >&2
     fi
     cook_a_string_arg "$COOKASTRING_INPUT"
@@ -728,8 +763,16 @@ jsonsh_cli_subshell() (
 jsonsh_debugging_defaults
 
 # If not sourced into a bash script, parse stdin and quit
-if ([ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ]);
+if [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ]; \
 then
   jsonsh_cli "$@"
   exit $?
 fi
+
+#if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
+#then
+#  parse_options "$@"
+#  tokenize | parse
+#fi
+
+# vi: expandtab sw=2 ts=2

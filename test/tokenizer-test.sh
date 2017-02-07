@@ -1,7 +1,9 @@
-#! /usr/bin/env bash
+#!/bin/sh
 
 cd ${0%/*}
-. ../JSON.sh
+
+# Can't detect sourcing in sh, so immediately terminate the attempt to parse
+. ../JSON.sh </dev/null
 
 i=0
 fails=0

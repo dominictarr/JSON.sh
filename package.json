@@ -1,7 +1,7 @@
 {
   "name": "JSON.sh",
-  "version": "0.2.0",
-  "description": "JSON parser written in bash",
+  "version": "0.3.3",
+  "description": "JSON parser written in shell",
   "homepage": "http://github.com/dominictarr/JSON.sh",
   "repository": {
     "type": "git",
