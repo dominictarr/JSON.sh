@@ -331,8 +331,8 @@ parse_options() {
   [ "$NORMALIZE" = 1 ] && BRIEF=0 && LEAFONLY=0 && PRUNE=0
 }
 
-awk_egrep () {
-  local pattern_string=$1
+awk_egrep() {
+  pattern_string="$1"
 
   [ -z "${AWK-}" ] && throw "No AWK found!"
   [ ! -x "$AWK" ] && throw "Not executable AWK='$AWK'!"
@@ -439,7 +439,7 @@ cook_a_string_arg() {
     echo "$1" | cook_a_string
 }
 
-tokenize () {
+tokenize() {
   local GREP_O
   local ESCAPE
   local CHAR
@@ -483,7 +483,7 @@ tokenize () {
   unset is_wordsplit_disabled
 }
 
-parse_array () {
+parse_array() {
   local index=0
   local ary=''
   local aryml=''
@@ -519,7 +519,7 @@ $value"
   :
 }
 
-parse_object () {
+parse_object() {
   local key
   local obj=''
   local objml=''
@@ -568,7 +568,7 @@ $key:$value"
 }
 
 REGEX_NUMBER='^[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?$'
-parse_value () {
+parse_value() {
   local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
     '{') parse_object "$jpath"
@@ -681,7 +681,7 @@ parse_value () {
   :
 }
 
-parse () {
+parse() {
   read -r token
   print_debug $DEBUGLEVEL_PRINTTOKEN "parse(1):" "token='$token'"
   parse_value
