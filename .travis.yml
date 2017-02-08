@@ -2,9 +2,9 @@ language: python
 
 sudo: false
 
+# Effectively the list below is for Linux; MacOS is kept separately
 os:
   - linux
-  - macos
 
 addons:
   apt:
@@ -25,12 +25,20 @@ env:
     - SHELL_PROGS=zsh
     - SHELL_PROGS=dash
     - SHELL_PROGS=busybox
-#    - SHELL_PROGS=ksh
+    - SHELL_PROGS=ksh
 #    - SHELL_PROGS=ksh88
 #    - SHELL_PROGS=ksh93
 
+# Note that this does not inherit env: or pacages from above
+matrix:
+  include:
+  - os: macos
+    env: SHELL_PROGS=bash
+  - os: macos
+    env: SHELL_PROGS=dash
+
 before_install:
-- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install busybox bash ash dash zsh ksh ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew update; brew install busybox bash ash dash zsh ksh ; fi
 
 # Whatever the current shebang, replace with hardcoded shell
 #script: >
@@ -39,4 +47,6 @@ before_install:
 #  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && ./all-tests.sh
 
 # This version of the script can use specified shell to source and test JSON.sh
+# Note that some platforms can lack some interpreters, so a test run
+# is effectively skipped and the test looks green if that's the case
 script: ./all-tests.sh
