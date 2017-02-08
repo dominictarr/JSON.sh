@@ -26,7 +26,7 @@ for input in valid/*.json
 do
   expected="${tmp}$(basename "$input" .json).no-head"
   # NOTE: The echo trick is required to ensure EOLs for both empty and populated results
-  echo "$(egrep -v '^\[]' < "$(dirname "$input")/$(basename "$input" .json).parsed")" > "$expected"
+  printf '%s\n' "$(egrep -v '^\[]' < "$(dirname "$input")/$(basename "$input" .json).parsed")" > "$expected"
   i="$(expr $i + 1)"
   # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
   JSONSH_OUT="$(jsonsh_cli -n < "$input")" && \
@@ -36,7 +36,7 @@ do
   then
     echo "not ok $i - $input"
     fails="$(expr $fails + 1)"
-    echo ">>> JSONSH_OUT='$JSONSH_OUT'"
+    printf ">>> JSONSH_OUT='%s'\n" "$JSONSH_OUT"
     echo ">>> EXPECTED : `ls -la $expected`"
     cat "$expected"
   else
