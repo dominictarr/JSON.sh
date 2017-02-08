@@ -563,8 +563,10 @@ tokenize() {
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE$" | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
+  RES=$?
   if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
-  unset is_wordsplit_disabled
+  unset is_wordsplit_disabled || true
+  return $RES
 }
 
 parse_array() {
