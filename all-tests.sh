@@ -62,6 +62,11 @@ SKIP_SHELLS=""
 [ -n "$SHELL_PROGS" ] || SHELL_PROGS="bash dash ash busybox ksh ksh88 ksh93"
 [ -n "$TEST_PATTERN" ] || TEST_PATTERN='test/*.sh'
 export TEST_PATTERN
+
+# Force zsh to expand $A into multiple words
+is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
+
 for SHELL_PROG in $SHELL_PROGS ; do
     [ "$SHELL_PROG" = "busybox" ] && SHELL_PROG="busybox sh"
     { [ "$SHELL_PROG" = "-" ] || [ "$SHELL_PROG" = " " ] ; } && \
@@ -85,6 +90,8 @@ for SHELL_PROG in $SHELL_PROGS ; do
         { overall_exitcode=$? ; FAIL_SHELLS="$FAIL_SHELLS $SHELL_PROG" ; }
     echo ""
 done
+
+if [ "${is_wordsplit_disabled-}" != 0 ]; then unsetopt shwordsplit; is_wordsplit_disabled=0; fi
 
 echo "OVERALL RESULT:"
 echo "OKAY_SHELLS = $OKAY_SHELLS"

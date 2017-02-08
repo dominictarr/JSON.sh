@@ -35,8 +35,13 @@ echo "1..$tests"
 
 set -x
 
+# Force zsh to expand $A into multiple words
+is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
+
 for input in $FILES
 do
+  if [ "${is_wordsplit_disabled-}" != 0 ]; then unsetopt shwordsplit; is_wordsplit_disabled=0; fi
   for EXT in parsed sorted normalized normalized_sorted \
         numnormalized numnormalized_stripped \
         normalized_numnormalized normalized_numnormalized_stripped \
