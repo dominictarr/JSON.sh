@@ -581,7 +581,7 @@ parse_array() {
       while :
       do
         parse_value "$1" "$index"
-        index=$((index+1))
+        index="$(expr $index + 1)"
         ary="$ary""$value"
         if [ -n "$SORTDATA_ARR" ]; then
             [ -z "$aryml" ] && aryml="$value" || aryml="$aryml
@@ -606,7 +606,7 @@ $value"
 }
 
 parse_object() {
-  local key
+  local key=''
   local obj=''
   local objml=''
   read -r token
@@ -617,7 +617,7 @@ parse_object() {
       while :
       do
         case "$token" in
-          '"'*'"') key=$token ;;
+          '"'*'"') key="$token" ;;
           *) throw "EXPECTED string GOT '${token:-EOF}'" ;;
         esac
         read -r token
@@ -655,7 +655,10 @@ $key:$value"
 
 REGEX_NUMBER='^[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?$'
 parse_value() {
-  local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
+  local jpath="${1:+$1,}$2"
+  local isleaf=0
+  local isempty=0
+  local print=0
   case "$token" in
     '{') parse_object "$jpath"
        [ "$value" = '{}' ] && isempty=1
