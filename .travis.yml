@@ -26,7 +26,7 @@ env:
     - SHELL_PROGS=zsh
     - SHELL_PROGS=dash
     - SHELL_PROGS=busybox
-    - SHELL_PROGS=ksh
+#    - SHELL_PROGS=ksh
 #    - SHELL_PROGS=ksh88
 #    - SHELL_PROGS=ksh93
 
