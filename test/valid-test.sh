@@ -75,7 +75,11 @@ do
         continue
       fi
 
-      if ! eval jsonsh_cli $OPTIONS < "$input" | diff -u - "$expected"
+      # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
+      JSONSH_OUT="$(eval jsonsh_cli $OPTIONS < "$input")" && \
+        echo "$JSONSH_OUT" | diff -u - "${expected}"
+      JSONSH_RES=$?
+      if [ "$JSONSH_RES" != 0 ]
       then
         echo "not ok $i - $input $EXT"
         fails="$(expr $fails + 1)"

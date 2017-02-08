@@ -22,9 +22,14 @@ echo "1..$tests"
 for input in valid/*.json
 do
   expected="${tmp}$(basename "$input" .json).no-head"
-  egrep -v '^\[]' < "$(dirname "$input")/$(basename "$input" .json).parsed" > "$expected"
+  # NOTE: The echo trick is required to ensure EOLs for both empty and populated results
+  echo "$(egrep -v '^\[]' < "$(dirname "$input")/$(basename "$input" .json).parsed")" > "$expected"
   i="$(expr $i + 1)"
-  if ! jsonsh_cli -n < "$input" | diff -u - "$expected"
+  # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
+  JSONSH_OUT="$(jsonsh_cli -n < "$input")" && \
+    echo "$JSONSH_OUT" | diff -u - "$expected"
+  JSONSH_RES=$?
+  if [ "$JSONSH_RES" != 0 ]
   then
     echo "not ok $i - $input"
     fails="$(expr $fails + 1)"
