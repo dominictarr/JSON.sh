@@ -61,10 +61,14 @@ ttest '[ null   ,  -110e10, "null" ]' \
 ttest '{"e": false}'     '{' '"e"' ':' 'false' '}'
 ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
 
+i="$(expr $i + 1)"
+input="Tokenizing the 'package.json' file"
 if tokenize < ../package.json >/dev/null
 then
+  echo "ok $i - $input"
+else
+  echo "not ok $i - $input"
   fails="$(expr $fails + 1)"
-  echo "Tokenizing package.json failed!"
 fi
 
 echo "$fails test(s) failed"
