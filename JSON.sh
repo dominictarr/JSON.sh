@@ -296,7 +296,7 @@ print_debug() {
     DL="$1"
     shift
     [ "$DEBUG" -ge "$DL" ] 2>/dev/null && \
-        echo -E "[$$]DEBUG($DL): $@" >&2
+        printf '[%s]DEBUG(%s): %s\n' "$$" "$DL" "$*" >&2
     :
 }
 
@@ -310,7 +310,7 @@ tee_stderr() {
     ### If debug is not enabled, skip tee'ing quickly with little impact
     [ "$DEBUG" -lt "$TEE_DEBUG" ] 2>/dev/null && cat || \
     while IFS= read -r LINE; do
-        echo -E "$LINE"
+        printf '%s\n' "$LINE"
         print_debug "$TEE_DEBUG" "$TEE_TAG" "$LINE"
     done
     :
@@ -599,7 +599,7 @@ $value"
       ;;
   esac
   if [ -n "$SORTDATA_ARR" ]; then
-    ary="$(echo -E "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
+    ary="$(printf '%s\n' "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
   fi
   [ "$BRIEF" = 0 ] && value="$(printf '[%s]' "$ary")" || value=""
   :
@@ -647,7 +647,7 @@ $key:$value"
     ;;
   esac
   if [ -n "$SORTDATA_OBJ" ]; then
-    obj="$(echo -E "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
+    obj="$(printf '%s\n' "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
   fi
   [ "$BRIEF" = 0 ] && value="$(printf '{%s}' "$obj")" || value=""
   :
