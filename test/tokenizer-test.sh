@@ -6,14 +6,23 @@ cd "$(dirname "$0")"
 JSONSH_SOURCED=yes
 . ../JSON.sh </dev/null
 
+[ -n "${tmp-}" ] || tmp="/tmp"
+
+# Avoid duplicate // in plain-shell syntax
+tmp="$(echo "$tmp" | sed 's,/+,/,g')"
+case "$tmp" in
+    */) ;;
+    *)  tmp="$tmp/" ;;
+esac
+
 i=0
 fails=0
 ttest () {
   i="$(expr $i + 1)"
   input="$1"; shift
   expected="$(printf '%s\n' "$@")"
-  echo "$expected" > /tmp/json_ttest_expected
-  if echo "$input" | tokenize | diff -u - /tmp/json_ttest_expected
+  echo "$expected" > "${tmp}"json_ttest_expected
+  if echo "$input" | tokenize | diff -u - "${tmp}"json_ttest_expected
   then
     echo "ok $i - $input"
   else
