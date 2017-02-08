@@ -93,6 +93,7 @@ SHELL_REGEX=no
 # Got support for pattern substitution in curly braces ${varname/pat/subst} ?
 SHELL_TWOSLASH=no
 
+SHELL_SUPPORTED=yes
 case "$SHELL_BASENAME" in
     bash)
         SHELL_REGEX=yes
@@ -123,22 +124,42 @@ case "$SHELL_BASENAME" in
             SHELL_TWOSLASH=yes
             SHELL_BASENAME=zsh
         else
-            echo "Unknown shell for JSON.sh: $SHELL_BASENAME" >&2
-            if [ "$SHELL_CANREEXEC" != no ] ; then
-                # NOTE: This can break scripts which source this file and are not in bash
-                for _TRY_SHELL in bash dash zsh ash busybox false ; do
-                    [ "$_TRY_SHELL" = busybox ] && _TRY_SHELL="busybox sh"
-                    ( $_TRY_SHELL -c "date" >/dev/null 2>/dev/null ) && break
-                done
-
-                echo "ERROR: JSON.sh requires to be run with BASH/ZSH/ASH/DASH interpreter! Subshelling due to SHELL_CANREEXEC=$SHELL_CANREEXEC : $_TRY_SHELL ..." >&2
-                ( $_TRY_SHELL "$0" "$@" )
-                exit $?
-            fi
+            SHELL_SUPPORTED=no
         fi
         ;;
 esac
 
+# TODO: detect having been sourced into non-bash shells?
+if [ -z "${JSONSH_SOURCED-}" ]; then
+    case "$SHELL_BASENAME" in
+        bash)
+            if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] ; then
+                JSONSH_SOURCED=no
+            fi
+            if  [ -n "${BASH-}" ] && [ "$0" = "-bash" ] ; then
+                JSONSH_SOURCED=yes
+            fi
+            ;;
+        *)  JSONSH_SOURCED=no ;;
+    esac
+fi
+
+if [ "$SHELL_SUPPORTED" != "yes" ]; then
+    echo "Unknown shell for JSON.sh: $SHELL_BASENAME" >&2
+    if [ "$SHELL_CANREEXEC" != no ] && [ "$JSONSH_SOURCED" != "yes" ] ; then
+        # NOTE: This can break scripts which source this file and are not in bash
+        for _TRY_SHELL in bash dash zsh ash busybox false ; do
+            [ "$_TRY_SHELL" = busybox ] && _TRY_SHELL="busybox sh"
+            ( $_TRY_SHELL -c "date" >/dev/null 2>/dev/null ) && break
+        done
+
+        echo "ERROR: JSON.sh requires to be run with BASH/ZSH/ASH/DASH interpreter! Subshelling due to SHELL_CANREEXEC=$SHELL_CANREEXEC : $_TRY_SHELL ..." >&2
+        ( $_TRY_SHELL "$0" "$@" )
+        exit $?
+    else
+        echo "WARNING: Not changing shell because SHELL_CANREEXEC=$SHELL_CANREEXEC or JSONSH_SOURCED=$JSONSH_SOURCED - but JSON parsing can fail later on" >&2
+    fi
+fi
 
 throw() {
   echo "$*" >&2
@@ -863,21 +884,6 @@ jsonsh_cli_subshell() (
 jsonsh_debugging_defaults
 
 # If NOT sourced into a bash script, parse stdin and quit
-# TODO: detect having been sourced into non-bash shells?
-if [ -z "${JSONSH_SOURCED-}" ]; then
-    case "$SHELL_BASENAME" in
-        bash)
-            if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] ; then
-                JSONSH_SOURCED=no
-            fi
-            if  [ -n "${BASH-}" ] && [ "$0" = "-bash" ] ; then
-                JSONSH_SOURCED=yes
-            fi
-            ;;
-        *)  JSONSH_SOURCED=no ;;
-    esac
-fi
-
 #[ "${JSONSH_SOURCED-}" != yes ] || \
 #if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ] || [ -z "$BASH_SOURCE" ]; \
 if [ "${JSONSH_SOURCED-}" != yes ]
