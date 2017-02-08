@@ -38,6 +38,7 @@ do
     fails="$(expr $fails + 1)"
     echo ">>> JSONSH_OUT='$JSONSH_OUT'"
     echo ">>> EXPECTED : `ls -la $expected`"
+    [ -s "$expected" ] || cat "$expected"
   else
     echo "ok $i - $input"
   fi
