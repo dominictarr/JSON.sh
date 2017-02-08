@@ -3,6 +3,8 @@
 # This script can now test with various shell interpreters
 # which you can pass in a space-separated list of SHELL_PROGS
 # To use old behavior : export SHELL_PROGS="-"
+# This script runs one or more actual sub-tests named in TEST_PATTERN
+# (the value may be a shell wildcard).
 
 cd "$(dirname "$0")"
 #set -e
@@ -12,9 +14,10 @@ jsonsh_tests() (
     [ -z "${SHELL_PROG-}" ] && SHELL_PROG=""
     fail=0
     tests=0
+    fail_names=""
     #all_tests=${__dirname:}
     #echo PLAN ${#all_tests}
-    for test in test/*.sh ;
+    for test in $TEST_PATTERN
     do
       tests="$(expr $tests + 1)"
       echo "TEST: $test"
@@ -30,17 +33,25 @@ jsonsh_tests() (
       else
         echo "FAIL: $test ($ret)"
         fail="$(expr $fail + 1)"
+        fail_names="$fail_names $test"
       fi
     done
 
     if [ "$fail" = 0 ]; then
-      printf 'SUCCESS '
+      printf '===== SUCCESS '
       exitcode=0
     else
-      printf 'FAILURE '
+      printf '===== FAILURE '
       exitcode=1
     fi
-    printf ": $passed / $tests\n"
+
+    # Note the leading space if populated
+    [ -z "$fail_names" ] || fail_names=" : failed for$fail_names"
+
+    # Note the leading space if populated
+    [ -z "$SHELL_PROG" ] || fail_names="$fail_names interpreted by '$SHELL_PROG'"
+
+    printf ": passed $passed / $tests tests$fail_names\n"
     exit $exitcode
 )
 
@@ -48,6 +59,8 @@ OKAY_SHELLS=""
 FAIL_SHELLS=""
 SKIP_SHELLS=""
 [ -n "$SHELL_PROGS" ] || SHELL_PROGS="bash dash ash busybox ksh ksh88 ksh93"
+[ -n "$TEST_PATTERN" ] || TEST_PATTERN='test/*.sh'
+export TEST_PATTERN
 for SHELL_PROG in $SHELL_PROGS ; do
     [ "$SHELL_PROG" = "busybox" ] && SHELL_PROG="busybox sh"
     { [ "$SHELL_PROG" = "-" ] || [ "$SHELL_PROG" = " " ] ; } && \
@@ -55,16 +68,16 @@ for SHELL_PROG in $SHELL_PROGS ; do
 
     if [ -n "$SHELL_PROG" ] ; then
         if $SHELL_PROG -c "date" >/dev/null 2>&1 ; then : ; else
-            echo "SKIP missing shell : $SHELL_PROG"
+            echo "=== SKIP missing shell : $SHELL_PROG"
             echo ""
             SKIP_SHELLS="$SKIP_SHELLS $SHELL_PROG"
             continue
         fi
         export SHELL_PROG
-        echo "TESTING WITH shell interpreter : $SHELL_PROG"
+        echo "=== TESTING WITH shell interpreter : $SHELL_PROG"
     else
         unset SHELL_PROG
-        echo "TESTING WITH default shell interpreter e.g. likely with /bin/sh, whatever this is in your OS"
+        echo "=== TESTING WITH default shell interpreter e.g. likely with /bin/sh, whatever this is in your OS"
     fi
 
     jsonsh_tests && OKAY_SHELLS="$OKAY_SHELLS $SHELL_PROG" || \
