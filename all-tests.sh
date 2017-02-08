@@ -59,7 +59,8 @@ jsonsh_tests() (
 OKAY_SHELLS=""
 FAIL_SHELLS=""
 SKIP_SHELLS=""
-[ -n "$SHELL_PROGS" ] || SHELL_PROGS="bash dash ash busybox ksh ksh88 ksh93"
+[ -n "$SHELL_PROGS" ] || SHELL_PROGS="bash dash ash zsh busybox"
+#SHELL_PROGS="$SHELL_PROGS ksh ksh88 ksh93"
 [ -n "$TEST_PATTERN" ] || TEST_PATTERN='test/*.sh'
 export TEST_PATTERN
 
