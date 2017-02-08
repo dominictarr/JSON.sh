@@ -17,8 +17,8 @@ addons:
       - ksh
 
 env:
-  global:
-    - DEBUG=99
+#  global:
+#    - DEBUG=99
 #    - TEST_PATTERN='test/*.sh'
   matrix:
     - SHELL_PROGS=bash
