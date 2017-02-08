@@ -90,6 +90,9 @@ do
       then
         echo "not ok $i - $input $EXT"
         fails="$(expr $fails + 1)"
+        printf ">>> JSONSH_OUT='%s'\n" "$JSONSH_OUT"
+        echo ">>> EXPECTED : `ls -la $expected`"
+        cat "$expected"
       else
         echo "ok $i - $input $EXT"
         passes="$(expr $passes + 1)"
