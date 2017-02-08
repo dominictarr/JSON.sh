@@ -308,8 +308,9 @@ tee_stderr() {
         TEE_DEBUG=$DEBUGLEVEL_PRINTTOKEN_PIPELINE
 
     ### If debug is not enabled, skip tee'ing quickly with little impact
+    ### The first "grep" should ensure that input for "while" has a trailing newline
     [ "$DEBUG" -lt "$TEE_DEBUG" ] 2>/dev/null && cat || \
-    while IFS= read -r LINE; do
+    $GGREP '' | while IFS= read -r LINE; do
         printf '%s\n' "$LINE"
         print_debug "$TEE_DEBUG" "$TEE_TAG" "$LINE"
     done
