@@ -99,14 +99,12 @@ case "$SHELL_BASENAME" in
         SHELL_REGEX=yes
         SHELL_TWOSLASH=yes
         ;;
-    dash)
-        SHELL_REGEX=yes
+    dash|ash) # The spartan bare minimum
         ;;
     busybox*)
         SHELL_TWOSLASH=yes
         SHELL_BASENAME=busybox
         ;;
-    #ash) ;;
     #ksh93) ;;
     #ksh88) ;;
     #ksh) ;;
