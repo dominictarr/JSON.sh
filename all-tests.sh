@@ -14,6 +14,7 @@ jsonsh_tests() (
     [ -z "${SHELL_PROG-}" ] && SHELL_PROG=""
     fail=0
     tests=0
+    passed=0
     fail_names=""
     #all_tests=${__dirname:}
     #echo PLAN ${#all_tests}
