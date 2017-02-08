@@ -19,6 +19,9 @@ fails=0
 i=0
 tests="$(ls -1 valid/*.json | wc -l)"
 echo "1..$tests"
+
+set -x
+
 for input in valid/*.json
 do
   expected="${tmp}$(basename "$input" .json).no-head"

@@ -33,6 +33,8 @@ tests="$(echo "$FILES" | wc -l)"
 tests="$(expr $tests \* 8)"
 echo "1..$tests"
 
+set -x
+
 for input in $FILES
 do
   for EXT in parsed sorted normalized normalized_sorted \
