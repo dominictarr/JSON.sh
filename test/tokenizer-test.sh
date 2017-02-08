@@ -22,7 +22,12 @@ ttest () {
   input="$1"; shift
   expected="$(printf '%s\n' "$@")"
   echo "$expected" > "${tmp}"json_ttest_expected
-  if echo "$input" | tokenize | diff -u - "${tmp}"json_ttest_expected
+
+  # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
+  JSONSH_OUT="$(echo "$input" | tokenize)" && \
+    printf '%s\n' "$JSONSH_OUT" | diff -u - "${tmp}"json_ttest_expected
+  JSONSH_RES=$?
+  if [ "$JSONSH_RES" = 0 ]
   then
     echo "ok $i - $input"
   else
@@ -56,7 +61,7 @@ ttest '[ null   ,  -110e10, "null" ]' \
 ttest '{"e": false}'     '{' '"e"' ':' 'false' '}'
 ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
 
-if ! cat ../package.json | tokenize >/dev/null
+if tokenize < ../package.json >/dev/null
 then
   fails="$(expr $fails + 1)"
   echo "Tokenizing package.json failed!"
