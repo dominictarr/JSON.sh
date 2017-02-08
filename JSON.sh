@@ -271,8 +271,8 @@ usage() {
 
 validate_debuglevel() {
     ### Beside command-line, debugging can be enabled by envvars from the caller
-    { [ x"$DEBUG" = xy ] || [ x"$DEBUG" = xyes ] ; } && DEBUG=1
-    [ -n "$DEBUG" ] && [ "$DEBUG" -ge 0 ] 2>/dev/null || DEBUG=0
+    { [ x"${DEBUG-}" = xy ] || [ x"${DEBUG-}" = xyes ] ; } && DEBUG=1
+    [ -n "${DEBUG-}" ] && [ "${DEBUG-}" -ge 0 ] 2>/dev/null || DEBUG=0
 }
 
 unquote() {
