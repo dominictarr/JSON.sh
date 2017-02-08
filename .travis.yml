@@ -1,14 +1,34 @@
 language: python
 
+sudo: false
+
+os:
+  - linux
+  - macos
+
 addons:
   apt:
     packages:
       - bash
       - dash
       - zsh
+      - busybox
+
+env:
+  matrix:
+    - SHELL_PROGS=bash
+    - SHELL_PROGS=ash
+    - SHELL_PROGS=dash
+    - SHELL_PROGS=busybox
+#    - SHELL_PROGS=ksh
+#    - SHELL_PROGS=ksh88
+#    - SHELL_PROGS=ksh93
 
 # Whatever the current shebang, replace with hardcoded shell
-script: >
-  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && ./all-tests.sh &&
-  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && ./all-tests.sh &&
-  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && ./all-tests.sh
+#script: >
+#  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && ./all-tests.sh &&
+#  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && ./all-tests.sh &&
+#  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && ./all-tests.sh
+
+# This version of the script can use specified shell to source and test JSON.sh
+script: ./all-tests.sh
