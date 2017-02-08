@@ -435,12 +435,12 @@ awk_egrep() {
 
 strip_newlines() {
   # replace line returns inside strings in input with \n string
-  typeset var ILINE
-  typeset var LINESTRIP
-  typeset var NUMQ
-  typeset var ODD
-  typeset var INSTRING=0
-  typeset var LINENUM=0
+  local ILINE
+  local LINESTRIP
+  local NUMQ
+  local ODD
+  local INSTRING=0
+  local LINENUM=0
 
   # The first "grep" should ensure that input for "while" has a trailing newline
   $GGREP '' | \
@@ -526,9 +526,9 @@ cook_a_string_arg() {
 }
 
 tokenize() {
-  typeset var GREP_O
-  typeset var ESCAPE
-  typeset var CHAR
+  local GREP_O
+  local ESCAPE
+  local CHAR
 
   if echo "test string" | $GEGREP -ao --color=never "test" >/dev/null 2>&1
   then
@@ -552,12 +552,12 @@ tokenize() {
   fi
 
   # Allow tabs inside strings
-  typeset var CHART="($CHAR|[[:blank:]])"
-  typeset var STRINGVAL="$CHART*($ESCAPE$CHART*)*"
-  typeset var STRING="(\"$STRINGVAL\")"
-  typeset var NUMBER='[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?'
-  typeset var KEYWORD='null|false|true'
-  typeset var SPACE='[[:space:]]+'
+  local CHART="($CHAR|[[:blank:]])"
+  local STRINGVAL="$CHART*($ESCAPE$CHART*)*"
+  local STRING="(\"$STRINGVAL\")"
+  local NUMBER='[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?'
+  local KEYWORD='null|false|true'
+  local SPACE='[[:space:]]+'
 
   # Force zsh to expand $A into multiple words
   is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
@@ -570,9 +570,9 @@ tokenize() {
 }
 
 parse_array() {
-  typeset var index=0
-  typeset var ary=''
-  typeset var aryml=''
+  local index=0
+  local ary=''
+  local aryml=''
   read -r token
   print_debug $DEBUGLEVEL_PRINTTOKEN "parse_array(1):" "token='$token'"
   case "$token" in
@@ -606,9 +606,9 @@ $value"
 }
 
 parse_object() {
-  typeset var key=''
-  typeset var obj=''
-  typeset var objml=''
+  local key=''
+  local obj=''
+  local objml=''
   read -r token
   print_debug $DEBUGLEVEL_PRINTTOKEN "parse_object(1):" "token='$token'"
   case "$token" in
@@ -655,10 +655,10 @@ $key:$value"
 
 REGEX_NUMBER='^[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?$'
 parse_value() {
-  typeset var jpath="${1:+$1,}$2"
-  typeset var isleaf=0
-  typeset var isempty=0
-  typeset var print=0
+  local jpath="${1:+$1,}$2"
+  local isleaf=0
+  local isempty=0
+  local print=0
   case "$token" in
     '{') parse_object "$jpath"
        [ "$value" = '{}' ] && isempty=1
