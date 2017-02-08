@@ -58,22 +58,87 @@
 # to either refuse running in a shell or pick an implementation
 # for certain code paths.
 
+get_shellname() {
+    # Linux
+    if [ -x "/proc/$$/exe" ] ; then
+        readlink "/proc/$$/exe" 2>/dev/null && return 0
+        ls -la "/proc/$$/exe" | sed -e 's,^[^\/]*/,/,' -e 's,^.* -> ,,' 2>/dev/null && return 0
+    fi
+
+    # Solaris/illumos
+    if [ -x "/proc/$$/path/a.out" ] ; then
+        readlink "/proc/$$/path/a.out" 2>/dev/null && return 0
+        ls -la "/proc/$$/path/a.out" | sed -e 's,^[^\/]*/,/,' -e 's,^.* -> ,,' 2>/dev/null && return 0
+    fi
+
+    # By far this is most portable approach... although forking makes it slow
+    ps -e -o pid,comm | while read _PID _COMM ; do
+        [ "$$" = "$_PID" ] && echo "$_COMM" && return 0
+    done
+
+    return 1
+}
+
+get_shellbasename() {
+    basename "$(get_shellname)" || echo "sh"
+}
+
+# Flag that can be passed by caller - if we can not detect the interpreter (or
+# know it as unsupported), may we try to re-execute with a more capable one?
+[ -n "${SHELL_CANREEXEC-}" ] || SHELL_CANREEXEC=yes
+SHELL_BASENAME="$(get_shellbasename)"
+
+# Got support for regular expressions in extended-test [[ "$1" =~ ${regex} ]] ?
 SHELL_REGEX=no
+# Got support for pattern substitution in curly braces ${varname/pat/subst} ?
 SHELL_TWOSLASH=no
-if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
-    SHELL_REGEX=yes
-    SHELL_TWOSLASH=yes
-fi
 
-# TODO: detect if busybox - there SHELL_TWOSLASH=yes too, but not in DASH
+case "$SHELL_BASENAME" in
+    bash)
+        SHELL_REGEX=yes
+        SHELL_TWOSLASH=yes
+        ;;
+    dash)
+        SHELL_REGEX=yes
+        ;;
+    busybox*)
+        SHELL_TWOSLASH=yes
+        SHELL_BASENAME=busybox
+        ;;
+    #ash) ;;
+    #ksh93) ;;
+    #ksh88) ;;
+    #ksh) ;;
+    zsh)
+        SHELL_REGEX=yes
+        SHELL_TWOSLASH=yes
+        ;;
+    *)
+        if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
+            SHELL_REGEX=yes
+            SHELL_TWOSLASH=yes
+            SHELL_BASENAME=bash
+        elif [ -n "${ZSH_VERSION-}" ] ; then
+            SHELL_REGEX=yes
+            SHELL_TWOSLASH=yes
+            SHELL_BASENAME=zsh
+        else
+            echo "Unknown shell for JSON.sh: $SHELL_BASENAME" >&2
+            if [ "$SHELL_CANREEXEC" != no ] ; then
+                # NOTE: This can break scripts which source this file and are not in bash
+                for _TRY_SHELL in bash dash zsh ash busybox false ; do
+                    [ "$_TRY_SHELL" = busybox ] && _TRY_SHELL="busybox sh"
+                    ( $_TRY_SHELL -c "date" >/dev/null 2>/dev/null ) && break
+                done
 
-false && \
-if [ -z "${BASH-}" ] && [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
-    # NOTE: This can break scripts which source this file and are not in bash
-    echo "ERROR: JSON.sh requires to be run with BASH/ZSH/ASH/DASH interpreter! Subshelling..." >&2
-    /usr/bin/bash "$0" "$@"
-    exit $?
-fi
+                echo "ERROR: JSON.sh requires to be run with BASH/ZSH/ASH/DASH interpreter! Subshelling due to SHELL_CANREEXEC=$SHELL_CANREEXEC : $_TRY_SHELL ..." >&2
+                ( $_TRY_SHELL "$0" "$@" )
+                exit $?
+            fi
+        fi
+        ;;
+esac
+
 
 throw() {
   echo "$*" >&2
@@ -666,7 +731,7 @@ parse_value() {
   if [ "$print" -ne 0 ] && [ -n "$EXTRACT_JPATH" ] ; then
     if [ "$SHELL_REGEX" = yes ]; then
         ### BASH regex matching:
-        [[ ${jpath} =~ ${EXTRACT_JPATH} ]] || print=-1
+        [[ "${jpath}" =~ ${EXTRACT_JPATH} ]] || print=-1
     else
         [ -n "$(echo "${jpath}" | $GEGREP "${EXTRACT_JPATH}")" ] || print=-1
     fi
@@ -797,10 +862,25 @@ jsonsh_cli_subshell() (
 ### Active logic
 jsonsh_debugging_defaults
 
-# If not sourced into a bash script, parse stdin and quit
-# TODO: non-bash shells?
-[ "${JSONSH_SOURCED-}" = yes ] || \
-if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ]; \
+# If NOT sourced into a bash script, parse stdin and quit
+# TODO: detect having been sourced into non-bash shells?
+if [ -z "${JSONSH_SOURCED-}" ]; then
+    case "$SHELL_BASENAME" in
+        bash)
+            if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] ; then
+                JSONSH_SOURCED=no
+            fi
+            if  [ -n "${BASH-}" ] && [ "$0" = "-bash" ] ; then
+                JSONSH_SOURCED=yes
+            fi
+            ;;
+        *)  JSONSH_SOURCED=no ;;
+    esac
+fi
+
+#[ "${JSONSH_SOURCED-}" != yes ] || \
+#if  [ "$0" = "$BASH_SOURCE[0]" ] || [ "$0" = "$BASH_SOURCE" ] || [ -z "${BASH-}" ] || [ -z "$BASH_SOURCE" ]; \
+if [ "${JSONSH_SOURCED-}" != yes ]
 then
   jsonsh_cli "$@"
   exit $?
