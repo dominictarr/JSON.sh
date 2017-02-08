@@ -16,7 +16,7 @@ echo "1..2"
 
 # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
 JSONSH_OUT="$(jsonsh_cli < "$INPUT")" && \
-    echo "$JSONSH_OUT" | diff -u - "${OUTPUT_ESCAPED}"
+    printf '%s\n' "$JSONSH_OUT" | diff -u - "${OUTPUT_ESCAPED}"
 JSONSH_RES=$?
 if [ "$JSONSH_RES" != 0 ] ; then
   echo "not ok - JSON.sh run without -s option should leave solidus escaping intact"
@@ -26,7 +26,7 @@ else
 fi
 
 JSONSH_OUT="$(jsonsh_cli -s < "$INPUT")" && \
-    echo "$JSONSH_OUT" | diff -u - "${OUTPUT_WITHOUT_ESCAPING}"
+    printf '%s\n' "$JSONSH_OUT" | diff -u - "${OUTPUT_WITHOUT_ESCAPING}"
 JSONSH_RES=$?
 if [ "$JSONSH_RES" != 0 ] ; then
   echo "not ok - JSON.sh run with -s option should remove solidus escaping"

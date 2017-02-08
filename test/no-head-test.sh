@@ -27,7 +27,7 @@ do
   i="$(expr $i + 1)"
   # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
   JSONSH_OUT="$(jsonsh_cli -n < "$input")" && \
-    echo "$JSONSH_OUT" | diff -u - "$expected"
+    printf '%s\n' "$JSONSH_OUT" | diff -u - "$expected"
   JSONSH_RES=$?
   if [ "$JSONSH_RES" != 0 ]
   then
