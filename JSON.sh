@@ -456,7 +456,7 @@ strip_newlines() {
     fi
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
-    ODD="$(($NUMQ%2))"
+    ODD="$(expr $NUMQ % 2)"
     LINENUM="$(expr $LINENUM + 1)"
 
     if [ "$ODD" -eq 1 ] && [ "$INSTRING" -eq 0 ]; then
