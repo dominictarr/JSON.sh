@@ -54,6 +54,7 @@ curl registry.npmjs.org/express | ./JSON.sh | egrep '\["versions","[^"]*"\]'
 * [step-/JSON.awk](https://github.com/step-/JSON.awk) JSON.sh ported to awk
 * [kristopolous/TickTick](https://github.com/kristopolous/TickTick) Object Oriented BASH
 * [archan937/jsonv.sh](https://github.com/archan937/jsonv.sh)
+* [mclarkson/JSONPath.sh](https://github.com/mclarkson/JSONPath.sh) JSONPath based on JSON.sh
 
 ## Installation
 
