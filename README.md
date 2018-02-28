@@ -566,6 +566,7 @@ The Illumos Project\tSunOS 5.11\tillumos-ad69a33\tJanuary 2015
 * [step-/JSON.awk](https://github.com/step-/JSON.awk) JSON.sh ported to awk
 * [kristopolous/TickTick](https://github.com/kristopolous/TickTick) Object Oriented BASH
 * [archan937/jsonv.sh](https://github.com/archan937/jsonv.sh)
+* [mclarkson/JSONPath.sh](https://github.com/mclarkson/JSONPath.sh) JSONPath based on JSON.sh
 
 ## Installation
 
