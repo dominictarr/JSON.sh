@@ -53,6 +53,25 @@ matrix:
 ### Currently the syntax of ksh needs too many syntax adaptations vs other shells
 #  - os: macos
 #    env: SHELL_PROGS=ksh
+  allow_failures:
+  - os: linux
+    env: SHELL_PROGS=ksh
+    addons:
+      apt:
+        packages:
+        - ksh
+  - os: linux
+    env: SHELL_PROGS=ksh88
+    addons:
+      apt:
+        packages:
+        - ksh88
+  - os: linux
+    env: SHELL_PROGS=ksh93
+    addons:
+      apt:
+        packages:
+        - ksh93
 
 # Currently there is no brew for busybox, ash ...
 before_install:
