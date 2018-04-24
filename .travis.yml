@@ -37,7 +37,7 @@ env:
 #    - SHELL_PROGS=ksh88
 #    - SHELL_PROGS=ksh93
 
-# Note that this does not inherit env: or packages from above
+# Note that this does not inherit env: nor addons:apt:packages from above
 matrix:
   include:
   - os: macos
