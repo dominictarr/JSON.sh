@@ -3,3 +3,7 @@ test/outlog
 
 # vi .swp files
 .*.swp
+
+# Dirs for recipe and CI tests
+_inst/
+tmp/
