@@ -29,6 +29,7 @@ if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi &&
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
 ./all-tests.sh
 """
+                sh """ echo "Are GitIgnores good after testing with '${TAG_SHELL}'? (should have no output below)"; make check-gitstatus || if [ "${params.REQUIRE_GOOD_GITIGNORE}" = false ]; then echo "WARNING GitIgnore tests found newly changed or untracked files" >&2 ; exit 0 ; else echo "FAILED GitIgnore tests" >&2 ; exit 1; fi """
             }
             script {
                 if ( params.DO_CLEANUP_AFTER_BUILD ) {
@@ -67,8 +68,6 @@ pipeline {
             defaultValue: "",
             description: 'When running tests, use this DEBUG value (as defined by JSON.sh, 99 is pretty verbose)',
             name: 'DEBUG')
-/*
-// TODO: Enable when a Makefile gets present
         booleanParam (
             defaultValue: true,
             description: 'Attempt a "make install" check in this run?',
@@ -77,7 +76,6 @@ pipeline {
             defaultValue: "`pwd`/tmp/_inst",
             description: 'If attempting a "make install" check in this run, what DESTDIR to specify? (absolute path, defaults to "BUILD_DIR/tmp/_inst")',
             name: 'USE_TEST_INSTALL_DESTDIR')
-*/
         booleanParam (
             defaultValue: true,
             description: 'Attempt a test with specified shell interpreter in this run?',
@@ -231,38 +229,26 @@ pipeline {
                         }
                     }
                 }
-/*
-// TODO: Enable when a Makefile gets present
-                stage ('make install check') {
+                stage ('check:make install') {
                     when { expression { return ( params.DO_TEST_INSTALL ) } }
                     steps {
                         script {
-                          if ( (params.DO_TEST_CHECK && params.DO_TEST_MEMCHECK) || (params.DO_TEST_CHECK && params.DO_TEST_DISTCHECK) || (params.DO_TEST_MEMCHECK && params.DO_TEST_DISTCHECK) ||
-                               (params.DO_TEST_INSTALL && params.DO_TEST_MEMCHECK) || (params.DO_TEST_INSTALL && params.DO_TEST_DISTCHECK) || (params.DO_TEST_INSTALL && params.DO_TEST_CHECK)
-                             ) {
-                              dir("tmp/test-install-check") {
+                            dir("tmp/test-install-check") {
                                 deleteDir()
-                                unstash 'built'
+                                unstash 'prepped'
                                 timeout (time: "${params.USE_TEST_TIMEOUT}".toInteger(), unit: 'MINUTES') {
-                                    sh """CCACHE_BASEDIR="`pwd`" ; export CCACHE_BASEDIR; make DESTDIR="${params.USE_TEST_INSTALL_DESTDIR}" install"""
+                                    sh """ make DESTDIR="${params.USE_TEST_INSTALL_DESTDIR}" install """
                                 }
-                                sh 'echo "Are GitIgnores good after make install? (should have no output below)"; git status -s || if [ "${params.REQUIRE_GOOD_GITIGNORE}" = false ]; then echo "WARNING GitIgnore tests found newly changed or untracked files" >&2 ; exit 0 ; else echo "FAILED GitIgnore tests" >&2 ; exit 1; fi'
+                                sh """ echo "Are GitIgnores good after make install? (should have no output below)"; make check-gitstatus || if [ "${params.REQUIRE_GOOD_GITIGNORE}" = false ]; then echo "WARNING GitIgnore tests found newly changed or untracked files" >&2 ; exit 0 ; else echo "FAILED GitIgnore tests" >&2 ; exit 1; fi """
                                 script {
                                     if ( params.DO_CLEANUP_AFTER_BUILD ) {
                                         deleteDir()
                                     }
                                 }
-                              }
-                            } else {
-                                timeout (time: "${params.USE_TEST_TIMEOUT}".toInteger(), unit: 'MINUTES') {
-                                    sh """CCACHE_BASEDIR="`pwd`" ; export CCACHE_BASEDIR; make DESTDIR="${params.USE_TEST_INSTALL_DESTDIR}" install"""
-                                }
-                                sh 'echo "Are GitIgnores good after make install? (should have no output below)"; git status -s || if [ "${params.REQUIRE_GOOD_GITIGNORE}" = false ]; then echo "WARNING GitIgnore tests found newly changed or untracked files" >&2 ; exit 0 ; else echo "FAILED GitIgnore tests" >&2 ; exit 1; fi'
                             }
                         }
                     }
                 } // stage:check:install
-*/
             } // parallel
         } // stage:check
         stage ('deploy if appropriate') {
