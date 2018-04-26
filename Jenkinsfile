@@ -27,7 +27,7 @@ def testShell(String PATH_SHELL, String TAG_SHELL) {
                 sh """
 if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi && \
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
-./all-tests.sh
+make check
 """
                 sh """ echo "Are GitIgnores good after testing with '${TAG_SHELL}'? (should have no output below)"; make check-gitstatus || if [ "${params.REQUIRE_GOOD_GITIGNORE}" = false ]; then echo "WARNING GitIgnore tests found newly changed or untracked files" >&2 ; exit 0 ; else echo "FAILED GitIgnore tests" >&2 ; exit 1; fi """
             }

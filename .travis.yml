@@ -87,11 +87,11 @@ before_install:
 
 # Whatever the current shebang, replace with hardcoded shell
 #script: >
-#  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && ./all-tests.sh &&
-#  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && ./all-tests.sh &&
-#  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && ./all-tests.sh
+#  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && make check &&
+#  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && make check &&
+#  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && make check
 
 # This version of the script can use specified shell to source and test JSON.sh
 # Note that some platforms can lack some interpreters, so a test run
 # is effectively skipped and the test looks green if that's the case
-script: ./all-tests.sh
+script: make check
