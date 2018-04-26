@@ -76,20 +76,20 @@ for SHELL_PROG in $SHELL_PROGS ; do
 
     if [ -n "$SHELL_PROG" ] ; then
         if $SHELL_PROG -c "date" >/dev/null 2>&1 ; then : ; else
-            echo "=== SKIP missing shell : $SHELL_PROG"
+            echo "=== SKIP missing shell : '$SHELL_PROG'"
             echo ""
-            SKIP_SHELLS="$SKIP_SHELLS $SHELL_PROG"
+            SKIP_SHELLS="$SKIP_SHELLS '$SHELL_PROG'"
             continue
         fi
         export SHELL_PROG
-        echo "=== TESTING WITH shell interpreter : $SHELL_PROG"
+        echo "=== TESTING WITH shell interpreter : '$SHELL_PROG'"
     else
         unset SHELL_PROG
         echo "=== TESTING WITH default shell interpreter e.g. likely with /bin/sh, whatever this is in your OS"
     fi
 
-    jsonsh_tests && OKAY_SHELLS="$OKAY_SHELLS $SHELL_PROG" || \
-        { overall_exitcode=$? ; FAIL_SHELLS="$FAIL_SHELLS $SHELL_PROG" ; }
+    jsonsh_tests && OKAY_SHELLS="$OKAY_SHELLS '$SHELL_PROG'" || \
+        { overall_exitcode=$? ; FAIL_SHELLS="$FAIL_SHELLS '$SHELL_PROG'" ; }
     echo ""
 done
 
