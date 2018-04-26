@@ -69,9 +69,10 @@ is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
 if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
 
 for SHELL_PROG in $SHELL_PROGS ; do
-    [ "$SHELL_PROG" = "busybox" ] && SHELL_PROG="busybox sh"
-    { [ "$SHELL_PROG" = "-" ] || [ "$SHELL_PROG" = " " ] ; } && \
-        SHELL_PROG=''
+    case "$SHELL_PROG" in
+        busybox|*/busybox) SHELL_PROG="$SHELL_PROG sh" ;;
+        ' '|'-') SHELL_PROG='' ;; # system default shell
+    esac
 
     if [ -n "$SHELL_PROG" ] ; then
         if $SHELL_PROG -c "date" >/dev/null 2>&1 ; then : ; else
