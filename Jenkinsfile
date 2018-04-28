@@ -6,7 +6,7 @@
 // import jenkins.model.*
 // import hudson.model.*
 // @NonCPS
-def testShell(String PATH_SHELL, String TAG_SHELL, String ALLOW_UNSTABLE) {
+def testShell(String PATH_SHELL, String TAG_SHELL, boolean ALLOW_UNSTABLE) {
     // Tests JSON.sh with the specified shell interpreter
     // (path to program and tag for reports and test dir name)
     def gotShell = false
@@ -27,7 +27,7 @@ def testShell(String PATH_SHELL, String TAG_SHELL, String ALLOW_UNSTABLE) {
                 def statusCode = sh returnStatus:true, script: """
 if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi && \
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
-\{ make check || \{
+{ make check || {
     RES=\$?
     if test "$ALLOW_UNSTABLE" = "true" ; then
         return 42
