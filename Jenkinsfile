@@ -27,13 +27,16 @@ def testShell(String PATH_SHELL, String TAG_SHELL, String ALLOW_UNSTABLE) {
                 def statusCode = sh returnStatus:true, script: """
 if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi && \
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
-{ make check || \
+{ make check || {
+    RES=\$?
     if test "$ALLOW_UNSTABLE" = true ; then
         return 42
-    fi; }
+    fi
+    return \$RES
+    }
+}
 """
                 if ( statusCode == 42 ) {
-                    manager.addShortText("UNSTABLE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
                     currentBuild.result = 'ABORTED'
                     manager.buildUnstable()
                     error("UNSTABLE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
