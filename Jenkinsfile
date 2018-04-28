@@ -37,7 +37,7 @@ SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
 }
 """
                 if ( statusCode == 42 ) {
-                    currentBuild.result = 'ABORTED'
+                    currentBuild.result = 'UNSTABLE'
                     error("UNSTABLE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
                     manager.buildUnstable()
                 } else {
