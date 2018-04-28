@@ -56,9 +56,9 @@ matrix:
   allow_failures:
   - env: SHELL_PROGS=zsh
   - env: SHELL_PROGS=busybox
-  - env: SHELL_PROGS=ksh
-  - env: SHELL_PROGS=ksh88
-  - env: SHELL_PROGS=ksh93
+#  - env: SHELL_PROGS=ksh
+#  - env: SHELL_PROGS=ksh88
+#  - env: SHELL_PROGS=ksh93
 
 # Currently there is no brew for busybox, ash ...
 before_install:
