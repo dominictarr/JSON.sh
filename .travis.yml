@@ -29,9 +29,9 @@ env:
   matrix:
     - SHELL_PROGS=bash
     - SHELL_PROGS=ash
-    - SHELL_PROGS=zsh
+#    - SHELL_PROGS=zsh
     - SHELL_PROGS=dash
-    - SHELL_PROGS=busybox
+#    - SHELL_PROGS=busybox
 ### Currently the syntax of ksh needs too many syntax adaptations vs other shells
 #    - SHELL_PROGS=ksh
 #    - SHELL_PROGS=ksh88
@@ -54,6 +54,18 @@ matrix:
 #  - os: macos
 #    env: SHELL_PROGS=ksh
   allow_failures:
+  - os: linux
+    env: SHELL_PROGS=zsh
+    addons:
+      apt:
+        packages:
+        - zsh
+  - os: linux
+    env: SHELL_PROGS=busybox
+    addons:
+      apt:
+        packages:
+        - busybox
   - os: linux
     env: SHELL_PROGS=ksh
     addons:

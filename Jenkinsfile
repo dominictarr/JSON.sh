@@ -6,7 +6,7 @@
 // import jenkins.model.*
 // import hudson.model.*
 // @NonCPS
-def testShell(String PATH_SHELL, String TAG_SHELL) {
+def testShell(String PATH_SHELL, String TAG_SHELL, String ALLOW_UNSTABLE) {
     // Tests JSON.sh with the specified shell interpreter
     // (path to program and tag for reports and test dir name)
     def gotShell = false
@@ -24,11 +24,28 @@ def testShell(String PATH_SHELL, String TAG_SHELL) {
             deleteDir()
             unstash 'prepped'
             timeout (time: "${params.USE_TEST_TIMEOUT}".toInteger(), unit: 'MINUTES') {
-                sh """
+                def statusCode = sh returnStatus:true, script: """
 if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi && \
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
-make check
+{ make check || \
+    if test "$ALLOW_UNSTABLE" = true ; then
+        return 42
+    fi; }
 """
+                if ( statusCode == 42 ) {
+                    manager.addShortText("UNSTABLE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
+                    currentBuild.result = 'ABORTED'
+                    manager.buildUnstable()
+                    error("UNSTABLE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
+                } else {
+                    if ( statusCode != 0 ) {
+                        currentBuild.result = 'FAILURE'
+                        manager.buildAborted()
+                        error("FAILURE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
+                        return null
+                    }
+                }
+
                 sh """ echo "Are GitIgnores good after testing with '${TAG_SHELL}'? (should have no output below)"; make check-gitstatus || if [ "${params.REQUIRE_GOOD_GITIGNORE}" = false ]; then echo "WARNING GitIgnore tests found newly changed or untracked files" >&2 ; exit 0 ; else echo "FAILED GitIgnore tests" >&2 ; exit 1; fi """
             }
             script {
@@ -80,6 +97,10 @@ pipeline {
             defaultValue: true,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_BASH')
+        booleanParam (
+            defaultValue: false,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_BASH')
         string (
             defaultValue: 'bash',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -88,6 +109,10 @@ pipeline {
             defaultValue: true,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_ASH')
+        booleanParam (
+            defaultValue: false,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_ASH')
         string (
             defaultValue: 'ash',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -96,6 +121,10 @@ pipeline {
             defaultValue: true,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_DASH')
+        booleanParam (
+            defaultValue: false,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_DASH')
         string (
             defaultValue: 'dash',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -104,6 +133,10 @@ pipeline {
             defaultValue: true,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_ZSH')
+        booleanParam (
+            defaultValue: true,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_ZSH')
         string (
             defaultValue: 'zsh',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -112,6 +145,10 @@ pipeline {
             defaultValue: true,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_BUSYBOX')
+        booleanParam (
+            defaultValue: true,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_BUSYBOX')
         string (
             defaultValue: 'busybox',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -120,6 +157,10 @@ pipeline {
             defaultValue: false,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_KSH')
+        booleanParam (
+            defaultValue: true,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_KSH')
         string (
             defaultValue: 'ksh',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -128,6 +169,10 @@ pipeline {
             defaultValue: false,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_KSH88')
+        booleanParam (
+            defaultValue: true,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_KSH88')
         string (
             defaultValue: 'ksh88',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -136,6 +181,10 @@ pipeline {
             defaultValue: false,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_KSH93')
+        booleanParam (
+            defaultValue: true,
+            description: 'Allow tests to fail (result in UNSTABLE) with specified shell interpreter in this run?',
+            name: 'ALLOW_UNSTABLE_SHELL_KSH93')
         string (
             defaultValue: 'ksh93',
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
@@ -169,7 +218,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_BASH ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_BASH, "bash")
+                            testShell(params.PATH_SHELL_BASH, "bash", params.ALLOW_UNSTABLE_SHELL_BASH)
                         }
                     }
                 }
@@ -177,7 +226,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_DASH ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_DASH, "dash")
+                            testShell(params.PATH_SHELL_DASH, "dash", params.ALLOW_UNSTABLE_SHELL_DASH)
                         }
                     }
                 }
@@ -185,7 +234,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_ASH ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_ASH, "ash")
+                            testShell(params.PATH_SHELL_ASH, "ash", params.ALLOW_UNSTABLE_SHELL_ASH)
                         }
                     }
                 }
@@ -193,7 +242,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_ZSH ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_ZSH, "zsh")
+                            testShell(params.PATH_SHELL_ZSH, "zsh", params.ALLOW_UNSTABLE_SHELL_ZSH)
                         }
                     }
                 }
@@ -201,7 +250,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_BUSYBOX ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_BUSYBOX, "busybox-sh")
+                            testShell(params.PATH_SHELL_BUSYBOX, "busybox-sh", params.ALLOW_UNSTABLE_SHELL_BUSYBOX)
                         }
                     }
                 }
@@ -209,7 +258,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_KSH ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_KSH, "ksh")
+                            testShell(params.PATH_SHELL_KSH, "ksh", params.ALLOW_UNSTABLE_SHELL_KSH)
                         }
                     }
                 }
@@ -217,7 +266,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_KSH88 ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_KSH88, "ksh88")
+                            testShell(params.PATH_SHELL_KSH88, "ksh88", params.ALLOW_UNSTABLE_SHELL_KSH88)
                         }
                     }
                 }
@@ -225,7 +274,7 @@ pipeline {
                     when { expression { return ( params.DO_TEST_SHELL_KSH93 ) } }
                     steps {
                         script {
-                            testShell(params.PATH_SHELL_KSH93, "ksh93")
+                            testShell(params.PATH_SHELL_KSH93, "ksh93", params.ALLOW_UNSTABLE_SHELL_KSH93)
                         }
                     }
                 }
