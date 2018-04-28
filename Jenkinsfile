@@ -38,13 +38,13 @@ SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
 """
                 if ( statusCode == 42 ) {
                     currentBuild.result = 'ABORTED'
-                    manager.buildUnstable()
                     error("UNSTABLE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
+                    manager.buildUnstable()
                 } else {
                     if ( statusCode != 0 ) {
                         currentBuild.result = 'FAILURE'
-                        manager.buildAborted()
                         error("FAILURE : Did not pass all tests for shell interpreter '${TAG_SHELL}' in PATH or by full filesystem name: '${PATH_SHELL}'")
+                        manager.buildFailure()
                         return null
                     }
                 }
