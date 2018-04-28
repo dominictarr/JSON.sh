@@ -27,9 +27,9 @@ def testShell(String PATH_SHELL, String TAG_SHELL, String ALLOW_UNSTABLE) {
                 def statusCode = sh returnStatus:true, script: """
 if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi && \
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
-{ make check || {
+\{ make check || \{
     RES=\$?
-    if test "$ALLOW_UNSTABLE" = true ; then
+    if test "$ALLOW_UNSTABLE" = "true" ; then
         return 42
     fi
     return \$RES
