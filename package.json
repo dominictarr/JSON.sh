@@ -10,6 +10,9 @@
   "bin": {
     "JSON.sh": "./JSON.sh"
   },
+  "files": [
+    "JSON.sh"
+  ],
   "dependencies": {},
   "devDependencies": {},
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://bit.ly/dominictarr)",
