@@ -1,5 +1,7 @@
-test/errlog
-test/outlog
+/test/errlog
+/test/outlog
 
 # vi .swp files
 .*.swp
+
+/JSON.sh-*.tgz
