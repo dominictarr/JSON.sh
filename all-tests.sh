@@ -1,10 +1,11 @@
 #!/bin/sh
 
-cd ${0%/*}
+cd "${0%/*}"
 
 #set -e
 fail=0
 tests=0
+passed=0
 #all_tests=${__dirname:}
 #echo PLAN ${#all_tests}
 for test in test/*.sh ;
@@ -23,11 +24,11 @@ do
 done
 
 if [ $fail -eq 0 ]; then
-  echo -n 'SUCCESS '
+  /bin/echo -n 'SUCCESS '
   exitcode=0
 else
-  echo -n 'FAILURE '
+  /bin/echo -n 'FAILURE '
   exitcode=1
 fi
-echo   $passed / $tests
+echo $passed / $tests
 exit $exitcode
