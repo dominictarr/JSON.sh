@@ -110,7 +110,7 @@ case "$SHELL_BASENAME" in
     #ksh) ;;
     zsh)
         SHELL_REGEX=yes
-        SHELL_TWOSLASH=yes
+        SHELL_TWOSLASH=unquoted
         ;;
     *)
         if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${BASH_SOURCE-}" ] ; then
@@ -119,7 +119,7 @@ case "$SHELL_BASENAME" in
             SHELL_BASENAME=bash
         elif [ -n "${ZSH_VERSION-}" ] ; then
             SHELL_REGEX=yes
-            SHELL_TWOSLASH=yes
+            SHELL_TWOSLASH=unquoted
             SHELL_BASENAME=zsh
         else
             SHELL_SUPPORTED=no
@@ -451,14 +451,20 @@ strip_newlines() {
   $GGREP '' | \
   tee_stderr BEFORE_STRIP $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   while IFS="" read -r ILINE; do
-    if [ "$SHELL_TWOSLASH" = yes ]; then
+    case "$SHELL_TWOSLASH" in
+      yes|quoted)
         # Remove escaped quotes:
         LINESTRIP="${ILINE//\\\"}"
         # Remove all chars but remaining quotes:
         LINESTRIP="${LINESTRIP//[^\"]}"
-    else
-        LINESTRIP="$(echo "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^\"],,g')"
-    fi
+        ;;
+      unquoted)
+        LINESTRIP=${ILINE//\\\"}
+        LINESTRIP=${LINESTRIP//[^\"]}
+        ;;
+      *)
+        LINESTRIP="$(echo "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^\"],,g')" ;;
+    esac
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
     ODD="$(expr $NUMQ % 2)"
@@ -710,11 +716,11 @@ parse_value() {
             # Not a number or no normalization - process like default
             value="$token"
             if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
-                if [ "$SHELL_TWOSLASH" = yes ] ; then
-                    value="${value//\\\//\/}"
-                else
-                    value="$(echo "$value" | $GSED 's#\\/#/#g')"
-                fi
+                case "$SHELL_TWOSLASH" in
+                    yes|quoted) value="${value//\\\//\/}" ;;
+                    unquoted) value=${value//\\\//\/} ;;
+                    *) value="$(echo "$value" | $GSED 's#\\/#/#g')" ;;
+                esac
             fi
        fi
        isleaf=1
@@ -723,11 +729,11 @@ parse_value() {
     *) value="$token"
        # if asked, replace solidus ("\/") in json strings with normalized value: "/"
        if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
-            if [ "$SHELL_TWOSLASH" = yes ] ; then
-                value="${value//\\\//\/}"
-            else
-                value="$(echo "$value" | $GSED 's#\\/#/#g')"
-            fi
+            case "$SHELL_TWOSLASH" in
+                yes|quoted) value="${value//\\\//\/}" ;;
+                unquoted) value=${value//\\\//\/} ;;
+                *) value="$(echo "$value" | $GSED 's#\\/#/#g')" ;;
+            esac
        fi
        isleaf=1
        [ "$value" = '""' ] && isempty=1
