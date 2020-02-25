@@ -453,9 +453,9 @@ strip_newlines() {
   while IFS="" read -r ILINE; do
     case "$SHELL_TWOSLASH" in
       yes|quoted)
-        # Remove escaped quotes:
+        # Remove escaped quotes as usual chars inside strings:
         LINESTRIP="${ILINE//\\\"}"
-        # Remove all chars but remaining quotes:
+        # Remove all other chars but remaining quotes:
         LINESTRIP="${LINESTRIP//[^\"]}"
         ;;
       unquoted)
@@ -463,7 +463,7 @@ strip_newlines() {
         LINESTRIP=${LINESTRIP//[^\"]}
         ;;
       *)
-        LINESTRIP="$(echo "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^\"],,g')" ;;
+        LINESTRIP="$(printf '%s\n' "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^"],,g')" ;;
     esac
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
