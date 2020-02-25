@@ -102,7 +102,7 @@ case "$SHELL_BASENAME" in
     dash|ash) # The spartan bare minimum
         ;;
     busybox*)
-        SHELL_TWOSLASH=yes
+        #SHELL_TWOSLASH=yes
         SHELL_BASENAME=busybox
         ;;
     #ksh93) ;;
