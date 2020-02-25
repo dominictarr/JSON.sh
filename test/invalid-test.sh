@@ -43,8 +43,7 @@ do
     (set -x ; jsonsh_cli < "$input")
     echo "<<<"
   else
-    echo "ok $i - $input was rejected as expected"
-    echo "# `cat "${tmp}"JSON.sh_errlog`"
+    echo "ok $i - $input was rejected as expected : `cat "${tmp}"JSON.sh_errlog`"
   fi
 done
 
