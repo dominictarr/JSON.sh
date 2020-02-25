@@ -37,5 +37,8 @@ else
   echo "ok $i - package.json"
 fi
 
+echo "$i test(s) executed"
 echo "$fails test(s) failed"
 exit $fails
+
+# vi: expandtab sw=2 ts=2

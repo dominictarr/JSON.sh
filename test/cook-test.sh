@@ -16,6 +16,9 @@ cooktest() {
     else
         echo "not ok $i - '$INPUT' => '$OUT' (expected '$EXPECT')"
         fails="$(expr $fails+1)"
+        echo "RETRACE >>>"
+        (set -x ; cook_a_string_arg "$INPUT")
+        echo "<<<"
     fi
 }
 
@@ -28,5 +31,8 @@ cooktest 'a"b' 'a\"b'
 cooktest 'a\"b' 'a\\\"b'
 cooktest 'a b' 'a b'
 
+echo "$i test(s) executed"
 echo "$fails test(s) failed"
 exit $fails
+
+# vi: expandtab sw=2 ts=2

@@ -33,6 +33,9 @@ for DOC in \
   else
     echo "not ok $i - empty input '$DOC' was rejected in non-pedantic mode"
     fails="$(expr $fails + 1)"
+    echo "RETRACE >>>"
+    (set -x ; echo "$DOC" | jsonsh_cli )
+    echo "<<<"
   fi
 
   i="$(expr $i + 1)"
@@ -40,6 +43,9 @@ for DOC in \
   then
     echo "not ok $i - empty input '$DOC' should be rejected in pedantic mode"
     fails="$(expr $fails + 1)"
+    echo "RETRACE >>>"
+    (set -x ; echo "$DOC" | jsonsh_cli -P)
+    echo "<<<"
   else
     echo "ok $i - empty input '$DOC' was rejected in pedantic mode"
   fi
@@ -48,3 +54,5 @@ done
 echo "$i test(s) executed"
 echo "$fails test(s) failed"
 exit $fails
+
+# vi: expandtab sw=2 ts=2

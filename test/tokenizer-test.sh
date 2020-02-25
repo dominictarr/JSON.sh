@@ -6,6 +6,12 @@ cd "$(dirname "$0")"
 JSONSH_SOURCED=yes
 . ../JSON.sh </dev/null
 
+# make test output TAP compatible
+# http://en.wikipedia.org/wiki/Test_Anything_Protocol
+
+fails=0
+tests=21
+
 [ -n "${tmp-}" ] || tmp="/tmp"
 
 # Avoid duplicate // in plain-shell syntax
@@ -15,8 +21,9 @@ case "$tmp" in
     *)  tmp="$tmp/" ;;
 esac
 
+echo "1..$tests"
+
 i=0
-fails=0
 ttest () {
   i="$(expr $i + 1)"
   input="$1"; shift
@@ -33,6 +40,9 @@ ttest () {
   else
     echo "not ok $i - $input"
     fails="$(expr $fails + 1)"
+    echo "RETRACE >>>"
+    (set -x ; echo "$input" | tokenize)
+    echo "<<<"
   fi
 }
 
@@ -65,11 +75,17 @@ i="$(expr $i + 1)"
 input="Tokenizing the 'package.json' file"
 if tokenize < ../package.json >/dev/null
 then
-  echo "ok $i - $input"
+    echo "ok $i - $input"
 else
-  echo "not ok $i - $input"
-  fails="$(expr $fails + 1)"
+    echo "not ok $i - $input"
+    fails="$(expr $fails + 1)"
+    echo "RETRACE >>>"
+    (set -x ; tokenize < ../package.json)
+    echo "<<<"
 fi
 
+echo "$i test(s) executed"
 echo "$fails test(s) failed"
 exit $fails
+
+# vi: expandtab sw=2 ts=2
