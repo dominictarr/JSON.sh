@@ -27,7 +27,7 @@ for DOC in \
  " \
 ; do
   i="$(expr $i + 1)"
-  if echo "$DOC" | jsonsh_cli
+  if (echo "$DOC" | jsonsh_cli)
   then
     echo "ok $i - empty input '$DOC' is okay in non-pedantic mode"
   else
@@ -39,7 +39,7 @@ for DOC in \
   fi
 
   i="$(expr $i + 1)"
-  if echo "$DOC" | jsonsh_cli -P
+  if (echo "$DOC" | jsonsh_cli -P)
   then
     echo "not ok $i - empty input '$DOC' should be rejected in pedantic mode"
     fails="$(expr $fails + 1)"

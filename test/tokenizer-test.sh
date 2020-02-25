@@ -73,7 +73,7 @@ ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
 
 i="$(expr $i + 1)"
 input="Tokenizing the 'package.json' file"
-if tokenize < ../package.json >/dev/null
+if ( tokenize < ../package.json >/dev/null )
 then
     echo "ok $i - $input"
 else

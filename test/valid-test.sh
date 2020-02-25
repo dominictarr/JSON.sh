@@ -70,13 +70,14 @@ do
       if [ "$JSON_TEST_GENERATE" = yes ] || \
          [ "$JSON_TEST_GENERATE" = auto -a ! -s "$expected" ]
       then
-        if ! eval jsonsh_cli $OPTIONS < "$input" > "$expected"
+        # Here we "eval" to pass OPTIONS that may have spaces in sort args
+        if ! (eval jsonsh_cli $OPTIONS < "$input" > "$expected")
         then
           echo "generation not ok $i - $input $EXT"
           fails="$(expr $fails + 1)"
           mv -f "$expected" "$expected.failed"
           echo "RETRACE >>>"
-          (set -x ; jsonsh_cli $OPTIONS < "$input")
+          (set -x ; eval jsonsh_cli $OPTIONS < "$input")
           echo "<<<"
         else
           echo "generation ok $i - $input $EXT"
@@ -98,7 +99,7 @@ do
         echo ">>> EXPECTED : `ls -la $expected`"
         cat "$expected"
         echo "RETRACE >>>"
-        (set -x ; jsonsh_cli $OPTIONS < "$input")
+        (set -x ; eval jsonsh_cli $OPTIONS < "$input")
         echo "<<<"
       else
         echo "ok $i - $input $EXT"

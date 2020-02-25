@@ -20,7 +20,7 @@ i=0
 
 # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
 i="$(expr $i + 1)"
-JSONSH_OUT="$(eval jsonsh_cli < "$INPUT")" && \
+JSONSH_OUT="$(jsonsh_cli < "$INPUT")" && \
     printf '%s\n' "$JSONSH_OUT" | diff -u - "${OUTPUT_ESCAPED}"
 JSONSH_RES=$?
 if [ "$JSONSH_RES" != 0 ] ; then
@@ -34,7 +34,7 @@ else
 fi
 
 i="$(expr $i + 1)"
-JSONSH_OUT="$(eval jsonsh_cli -s < "$INPUT")" && \
+JSONSH_OUT="$(jsonsh_cli -s < "$INPUT")" && \
     printf '%s\n' "$JSONSH_OUT" | diff -u - "${OUTPUT_WITHOUT_ESCAPING}"
 JSONSH_RES=$?
 if [ "$JSONSH_RES" != 0 ] ; then
