@@ -19,7 +19,8 @@ addons:
       - zsh
       - ash
       - busybox
-      - ksh
+### Currently the syntax of ksh needs too many syntax adaptations vs other shells
+###      - ksh
 
 env:
 #  global:
@@ -31,6 +32,7 @@ env:
     - SHELL_PROGS=zsh
     - SHELL_PROGS=dash
     - SHELL_PROGS=busybox
+### Currently the syntax of ksh needs too many syntax adaptations vs other shells
 #    - SHELL_PROGS=ksh
 #    - SHELL_PROGS=ksh88
 #    - SHELL_PROGS=ksh93
@@ -42,10 +44,15 @@ matrix:
     env: SHELL_PROGS=bash
   - os: macos
     env: SHELL_PROGS=dash
-  - os: macos
-    env: SHELL_PROGS=zsh
-  - os: macos
-    env: SHELL_PROGS=ksh
+### ZSH test fails probably because of macos awk, needs someone with macos to pick a fix:
+### +/usr/bin/awk $'{\n    while ($0) {\n      start=match($0, pattern);\n      token=substr($0, start, RLENGTH);\n      print token;\n      $0=substr($0, start+RLENGTH);\n    }\n  }' 'pattern=("([^[:cntrl:]"\\\\]|[[:blank:]])*((\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})([^[:cntrl:]"\\\\]|[[:blank:]])*)*")|[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?|null|false|true|[[:space:]]+|.'
+### +/usr/bin/egrep -v '^[[:space:]]+$'
+### +print_debug 2 'parse(1):' 'token='\''"hello\u20world"'\'
+#  - os: macos
+#    env: SHELL_PROGS=zsh
+### Currently the syntax of ksh needs too many syntax adaptations vs other shells
+#  - os: macos
+#    env: SHELL_PROGS=ksh
 
 # Currently there is no brew for busybox, ash ...
 before_install:
