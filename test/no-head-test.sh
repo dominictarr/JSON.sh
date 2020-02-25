@@ -6,6 +6,12 @@ cd "$(dirname "$0")"
 JSONSH_SOURCED=yes
 . ../JSON.sh </dev/null
 
+# make test output TAP compatible
+# http://en.wikipedia.org/wiki/Test_Anything_Protocol
+
+fails=0
+tests="`ls -1 valid/*.json | wc -l`"
+
 [ -n "${tmp-}" ] || tmp="/tmp"
 
 # Avoid duplicate // in plain-shell syntax
@@ -15,13 +21,9 @@ case "$tmp" in
     *)  tmp="$tmp/" ;;
 esac
 
-fails=0
+echo "1..${tests##* }"
+
 i=0
-tests="$(ls -1 valid/*.json | wc -l)"
-echo "1..$tests"
-
-set -x
-
 for input in valid/*.json
 do
   expected="${tmp}$(basename "$input" .json).no-head"
@@ -36,14 +38,20 @@ do
   then
     echo "not ok $i - $input"
     fails="$(expr $fails + 1)"
+    echo "INPUT WAS >>>"
+    cat "$input"
     printf ">>> JSONSH_OUT='%s'\n" "$JSONSH_OUT"
     echo ">>> EXPECTED : `ls -la $expected`"
     cat "$expected"
+    echo "RETRACE >>>"
+    (set -x ; jsonsh_cli -n < "$input")
+    echo "<<<"
   else
     echo "ok $i - $input"
   fi
 done
 
+echo "$i test(s) executed"
 echo "$fails test(s) failed"
 exit $fails
 

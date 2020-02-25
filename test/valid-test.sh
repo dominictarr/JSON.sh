@@ -15,6 +15,9 @@ cd "$(dirname "$0")"
 JSONSH_SOURCED=yes
 . ../JSON.sh </dev/null
 
+# make test output TAP compatible
+# http://en.wikipedia.org/wiki/Test_Anything_Protocol
+
 fails=0
 passes=0
 skips=0
@@ -33,9 +36,7 @@ tests="$(echo "$FILES" | wc -l)"
 tests="$(expr $tests \* 8)"
 echo "1..$tests"
 
-set -x
-
-# Force zsh to expand $A into multiple words
+# Force zsh to expand $FILES into multiple words
 is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
 if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
 
@@ -69,11 +70,15 @@ do
       if [ "$JSON_TEST_GENERATE" = yes ] || \
          [ "$JSON_TEST_GENERATE" = auto -a ! -s "$expected" ]
       then
-        if ! eval jsonsh_cli $OPTIONS < "$input" > "$expected"
+        # Here we "eval" to pass OPTIONS that may have spaces in sort args
+        if ! (eval jsonsh_cli $OPTIONS < "$input" > "$expected")
         then
           echo "generation not ok $i - $input $EXT"
           fails="$(expr $fails + 1)"
           mv -f "$expected" "$expected.failed"
+          echo "RETRACE >>>"
+          (set -x ; eval jsonsh_cli $OPTIONS < "$input")
+          echo "<<<"
         else
           echo "generation ok $i - $input $EXT"
           passes="$(expr $passes + 1)"
@@ -93,6 +98,9 @@ do
         printf ">>> JSONSH_OUT='%s'\n" "$JSONSH_OUT"
         echo ">>> EXPECTED : `ls -la $expected`"
         cat "$expected"
+        echo "RETRACE >>>"
+        (set -x ; eval jsonsh_cli $OPTIONS < "$input")
+        echo "<<<"
       else
         echo "ok $i - $input $EXT"
         passes="$(expr $passes + 1)"
@@ -106,6 +114,9 @@ done
 
 [ -n "$JSON_TEST_GENERATE" ] && echo "$generated expected results generated"
 [ -n "$skips" ] && echo "$skips test(s) skipped (missing expected results file)"
+echo "$i test(s) executed"
 echo "$passes test(s) succeeded"
 echo "$fails test(s) failed"
 exit $fails
+
+# vi: expandtab sw=2 ts=2

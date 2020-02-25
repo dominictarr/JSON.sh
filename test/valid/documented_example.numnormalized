@@ -1,7 +1,7 @@
 ["var1"]	"val1"
 ["split\nkey"]	"value"
 ["var0"]	"escaped \" quote"
-["splitValue"]	"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")"
+["splitValue"]	"there \n  are a newline and three spaces (one after \"there\" and two before \"are\")"
 ["array",0]	"z"
 ["array",1]	"a"
 ["array",2]	"b"
@@ -44,4 +44,4 @@
 ["arrOfObjs",7,"str"]	"5"
 ["arrOfObjs",7]	{"var":"val1","str":"5"}
 ["arrOfObjs"]	[{"var":"val1","str":"s"},{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":"S"},{"var":"val1","str":"\""},{"var":"val1","str":5.000000000000},{"var":"val1","str":"5"}]
-[]	{"var1":"val1","split\nkey":"value","var0":"escaped \" quote","splitValue":"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")","array":["z","a","b",3.000000000000,20.000000000000,0.000000000000,"","","\"","escaping\"several\"\"\nquote\"s and\nnewlines"],"aNumber":1.000000000000,"var8":"string\nwith\nproper\\\nnewlines","var38":"","emptyarr":[],"emptyobj":{},"emptystr":"","arrOfObjs":[{"var":"val1","str":"s"},{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":"S"},{"var":"val1","str":"\""},{"var":"val1","str":5.000000000000},{"var":"val1","str":"5"}]}
+[]	{"var1":"val1","split\nkey":"value","var0":"escaped \" quote","splitValue":"there \n  are a newline and three spaces (one after \"there\" and two before \"are\")","array":["z","a","b",3.000000000000,20.000000000000,0.000000000000,"","","\"","escaping\"several\"\"\nquote\"s and\nnewlines"],"aNumber":1.000000000000,"var8":"string\nwith\nproper\\\nnewlines","var38":"","emptyarr":[],"emptyobj":{},"emptystr":"","arrOfObjs":[{"var":"val1","str":"s"},{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":"S"},{"var":"val1","str":"\""},{"var":"val1","str":5.000000000000},{"var":"val1","str":"5"}]}

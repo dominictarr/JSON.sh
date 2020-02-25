@@ -27,19 +27,27 @@ for DOC in \
  " \
 ; do
   i="$(expr $i + 1)"
-  if echo "$DOC" | jsonsh_cli
+  JSONSH_OUT="$(echo "$DOC" | jsonsh_cli 2>/dev/null)" ; JSONSH_RES=$?
+  if [ "$JSONSH_RES" = 0 ]
   then
     echo "ok $i - empty input '$DOC' is okay in non-pedantic mode"
   else
     echo "not ok $i - empty input '$DOC' was rejected in non-pedantic mode"
     fails="$(expr $fails + 1)"
+    echo "RETRACE >>>"
+    (set -x ; echo "$DOC" | jsonsh_cli )
+    echo "<<<"
   fi
 
   i="$(expr $i + 1)"
-  if echo "$DOC" | jsonsh_cli -P
+  JSONSH_OUT="$(echo "$DOC" | jsonsh_cli -P 2>/dev/null)" ; JSONSH_RES=$?
+  if [ "$JSONSH_RES" = 0 ]
   then
     echo "not ok $i - empty input '$DOC' should be rejected in pedantic mode"
     fails="$(expr $fails + 1)"
+    echo "RETRACE >>>"
+    (set -x ; echo "$DOC" | jsonsh_cli -P)
+    echo "<<<"
   else
     echo "ok $i - empty input '$DOC' was rejected in pedantic mode"
   fi
@@ -48,3 +56,5 @@ done
 echo "$i test(s) executed"
 echo "$fails test(s) failed"
 exit $fails
+
+# vi: expandtab sw=2 ts=2

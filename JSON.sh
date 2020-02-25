@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Copyright (C) 2014-2015 Dominic Tarr
-# Copyright (C) 2015-2017 Eaton
+# Copyright (C) 2015-2020 Eaton
 #
 #! \file    JSON.sh
 #  \brief   A json parser written in shell-script
@@ -102,7 +102,7 @@ case "$SHELL_BASENAME" in
     dash|ash) # The spartan bare minimum
         ;;
     busybox*)
-        SHELL_TWOSLASH=yes
+        #SHELL_TWOSLASH=yes
         SHELL_BASENAME=busybox
         ;;
     #ksh93) ;;
@@ -110,16 +110,16 @@ case "$SHELL_BASENAME" in
     #ksh) ;;
     zsh)
         SHELL_REGEX=yes
-        SHELL_TWOSLASH=yes
+        SHELL_TWOSLASH=unquoted
         ;;
     *)
-        if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
+        if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${BASH_SOURCE-}" ] ; then
             SHELL_REGEX=yes
             SHELL_TWOSLASH=yes
             SHELL_BASENAME=bash
         elif [ -n "${ZSH_VERSION-}" ] ; then
             SHELL_REGEX=yes
-            SHELL_TWOSLASH=yes
+            SHELL_TWOSLASH=unquoted
             SHELL_BASENAME=zsh
         else
             SHELL_SUPPORTED=no
@@ -251,8 +251,8 @@ usage() {
   echo "-N='args' - Normalize the input JSON markup into a single-line JSON"
   echo "     output with contents sorted like for -S='args', e.g. use -N='-n'"
   echo "     This is equivalent to -N -S='args', just more compact to write"
-  echo "-No='args' - enable sorting (with given arguments) only for objects"
-  echo "-Na='args' - enable sorting (with given arguments) only for arrays"
+  echo "-No|-No='args' - enable sorting (with given arguments) only for objects"
+  echo "-Na|-Na='args' - enable sorting (with given arguments) only for arrays"
   echo
   echo "Numeric values can be normalized (e.g. convert engineering into layman)"
   echo "-Nn='fmtstr' - printf the detected numeric values with the fmtstr conversion"
@@ -351,6 +351,12 @@ parse_options() {
       -Na=*) NORMALIZE=1
           SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-Na=,,' 2>/dev/null | unquote )"
       ;;
+      -No) SORTDATA_OBJ="$GSORT"
+            NORMALIZE=1
+      ;;
+      -Na) SORTDATA_ARR="$GSORT"
+            NORMALIZE=1
+      ;;
       -Nnx) NORMALIZE_NUMBERS_STRIP=1
             NORMALIZE_NUMBERS=1
       ;;
@@ -445,14 +451,20 @@ strip_newlines() {
   $GGREP '' | \
   tee_stderr BEFORE_STRIP $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
   while IFS="" read -r ILINE; do
-    if [ "$SHELL_TWOSLASH" = yes ]; then
-        # Remove escaped quotes:
+    case "$SHELL_TWOSLASH" in
+      yes|quoted)
+        # Remove escaped quotes as usual chars inside strings:
         LINESTRIP="${ILINE//\\\"}"
-        # Remove all chars but remaining quotes:
+        # Remove all other chars but remaining quotes:
         LINESTRIP="${LINESTRIP//[^\"]}"
-    else
-        LINESTRIP="$(echo "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^\"],,g')"
-    fi
+        ;;
+      unquoted)
+        LINESTRIP=${ILINE//\\\"}
+        LINESTRIP=${LINESTRIP//[^\"]}
+        ;;
+      *)
+        LINESTRIP="$(printf '%s\n' "$ILINE" | $GSED -e 's,\\\",,g' -e 's,[^"],,g')" ;;
+    esac
     # Count unescaped quotes:
     NUMQ="${#LINESTRIP}"
     ODD="$(expr $NUMQ % 2)"
@@ -558,11 +570,11 @@ tokenize() {
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
-  # Force zsh to expand $A into multiple words
+  # Force zsh to expand $GREP_O into multiple words
   is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
   if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE$" | \
+  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE"'$' | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
   RES=$?
   if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
@@ -600,7 +612,12 @@ $value"
       ;;
   esac
   if [ -n "$SORTDATA_ARR" ]; then
+    # Force zsh to expand $SORTDATA* into multiple words
+    is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+    if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
     ary="$(printf '%s\n' "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
+    if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
+    unset is_wordsplit_disabled || true
   fi
   [ "$BRIEF" = 0 ] && value="$(printf '[%s]' "$ary")" || value=""
   :
@@ -648,7 +665,12 @@ $key:$value"
     ;;
   esac
   if [ -n "$SORTDATA_OBJ" ]; then
+    # Force zsh to expand $SORTDATA* into multiple words
+    is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+    if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
     obj="$(printf '%s\n' "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
+    if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
+    unset is_wordsplit_disabled || true
   fi
   [ "$BRIEF" = 0 ] && value="$(printf '{%s}' "$obj")" || value=""
   :
@@ -704,11 +726,11 @@ parse_value() {
             # Not a number or no normalization - process like default
             value="$token"
             if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
-                if [ "$SHELL_TWOSLASH" = yes ] ; then
-                    value="${value//\\\//\/}"
-                else
-                    value="$(echo "$value" | $GSED 's#\\/#/#g')"
-                fi
+                case "$SHELL_TWOSLASH" in
+                    yes|quoted) value="${value//\\\//\/}" ;;
+                    unquoted) value=${value//\\\//\/} ;;
+                    *) value="$(echo "$value" | $GSED 's#\\/#/#g')" ;;
+                esac
             fi
        fi
        isleaf=1
@@ -717,11 +739,11 @@ parse_value() {
     *) value="$token"
        # if asked, replace solidus ("\/") in json strings with normalized value: "/"
        if [ "$NORMALIZE_SOLIDUS" = 1 ]; then
-            if [ "$SHELL_TWOSLASH" = yes ] ; then
-                value="${value//\\\//\/}"
-            else
-                value="$(echo "$value" | $GSED 's#\\/#/#g')"
-            fi
+            case "$SHELL_TWOSLASH" in
+                yes|quoted) value="${value//\\\//\/}" ;;
+                unquoted) value=${value//\\\//\/} ;;
+                *) value="$(echo "$value" | $GSED 's#\\/#/#g')" ;;
+            esac
        fi
        isleaf=1
        [ "$value" = '""' ] && isempty=1
