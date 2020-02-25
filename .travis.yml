@@ -1,4 +1,7 @@
-language: python
+# The language here really is shell. There is an unused (in CI) setup.py
+# but that does not command a hassle of requiring a python version that
+# exists on all Travis OSes.
+#language: python
 
 sudo: false
 
