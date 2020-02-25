@@ -2,6 +2,8 @@
 # but that does not command a hassle of requiring a python version that
 # exists on all Travis OSes.
 #language: python
+# Note: Per travis docs, this is currently alias to language:minimal :
+language: shell
 
 sudo: false
 
