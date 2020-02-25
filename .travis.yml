@@ -40,15 +40,22 @@ matrix:
     env: SHELL_PROGS=bash
   - os: macos
     env: SHELL_PROGS=dash
+  - os: macos
+    env: SHELL_PROGS=zsh
+  - os: macos
+    env: SHELL_PROGS=ksh
 
 # Currently there is no brew for busybox, ash ...
 before_install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew update; brew install bash ; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install busybox ; fi || echo "FAILED to install optional shell on MacOS"
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install ash ; fi || echo "FAILED to install optional shell on MacOS"
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install dash ; fi || echo "FAILED to install optional shell on MacOS"
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install zsh ; fi || echo "FAILED to install optional shell on MacOS"
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install ksh ; fi || echo "FAILED to install optional shell on MacOS"
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew update ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install $SHELL_PROGS ; fi
+
+#- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install bash ; fi
+#- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install dash ; fi
+#- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install zsh ; fi
+#- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install ksh ; fi
+#- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install busybox ; fi || echo "FAILED to install optional shell on MacOS"
+#- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew install ash ; fi || echo "FAILED to install optional shell on MacOS"
 
 # Whatever the current shebang, replace with hardcoded shell
 #script: >
