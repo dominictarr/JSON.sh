@@ -570,11 +570,11 @@ tokenize() {
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
-  # Force zsh to expand $A into multiple words
+  # Force zsh to expand $GREP_O into multiple words
   is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
   if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE$" | \
+  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE"'$' | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
   RES=$?
   if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
