@@ -612,7 +612,12 @@ $value"
       ;;
   esac
   if [ -n "$SORTDATA_ARR" ]; then
+    # Force zsh to expand $SORTDATA* into multiple words
+    is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+    if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
     ary="$(printf '%s\n' "$aryml" | $SORTDATA_ARR | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
+    if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
+    unset is_wordsplit_disabled || true
   fi
   [ "$BRIEF" = 0 ] && value="$(printf '[%s]' "$ary")" || value=""
   :
@@ -660,7 +665,12 @@ $key:$value"
     ;;
   esac
   if [ -n "$SORTDATA_OBJ" ]; then
+    # Force zsh to expand $SORTDATA* into multiple words
+    is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
+    if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
     obj="$(printf '%s\n' "$objml" | $SORTDATA_OBJ | tr '\n' ',' | $GSED 's|,*$||' 2>/dev/null | $GSED 's|^,*||' 2>/dev/null)"
+    if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
+    unset is_wordsplit_disabled || true
   fi
   [ "$BRIEF" = 0 ] && value="$(printf '{%s}' "$obj")" || value=""
   :
