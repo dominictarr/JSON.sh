@@ -1,5 +1,5 @@
 {"var1":"val1","split
-key":"value","var0":"escaped \" quote","splitValue":"there
+key":"value","var0":"escaped \" quote","splitValue":"there 
   are a newline and three spaces (one after \"there\" and two before \"are\")",
 "array":["z","a","b",3,20,0,"","","\""
 ,"escaping\"several\"\"
