@@ -251,8 +251,8 @@ usage() {
   echo "-N='args' - Normalize the input JSON markup into a single-line JSON"
   echo "     output with contents sorted like for -S='args', e.g. use -N='-n'"
   echo "     This is equivalent to -N -S='args', just more compact to write"
-  echo "-No='args' - enable sorting (with given arguments) only for objects"
-  echo "-Na='args' - enable sorting (with given arguments) only for arrays"
+  echo "-No|-No='args' - enable sorting (with given arguments) only for objects"
+  echo "-Na|-Na='args' - enable sorting (with given arguments) only for arrays"
   echo
   echo "Numeric values can be normalized (e.g. convert engineering into layman)"
   echo "-Nn='fmtstr' - printf the detected numeric values with the fmtstr conversion"
@@ -350,6 +350,12 @@ parse_options() {
       ;;
       -Na=*) NORMALIZE=1
           SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-Na=,,' 2>/dev/null | unquote )"
+      ;;
+      -No) SORTDATA_OBJ="$GSORT"
+            NORMALIZE=1
+      ;;
+      -Na) SORTDATA_ARR="$GSORT"
+            NORMALIZE=1
       ;;
       -Nnx) NORMALIZE_NUMBERS_STRIP=1
             NORMALIZE_NUMBERS=1
