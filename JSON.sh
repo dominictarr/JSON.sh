@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Copyright (C) 2014-2015 Dominic Tarr
-# Copyright (C) 2015-2017 Eaton
+# Copyright (C) 2015-2020 Eaton
 #
 #! \file    JSON.sh
 #  \brief   A json parser written in shell-script
@@ -113,7 +113,7 @@ case "$SHELL_BASENAME" in
         SHELL_TWOSLASH=yes
         ;;
     *)
-        if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
+        if [ -n "${BASH-}" ] || [ -n "${BASH_VERSION-}" ] || [ -n "${BASH_SOURCE-}" ] ; then
             SHELL_REGEX=yes
             SHELL_TWOSLASH=yes
             SHELL_BASENAME=bash
