@@ -33,7 +33,7 @@ env:
 #    - SHELL_PROGS=ksh88
 #    - SHELL_PROGS=ksh93
 
-# Note that this does not inherit env: or pacages from above
+# Note that this does not inherit env: or packages from above
 matrix:
   include:
   - os: macos
@@ -41,8 +41,9 @@ matrix:
   - os: macos
     env: SHELL_PROGS=dash
 
+# Currently there is no brew for busybox
 before_install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew update; brew install busybox bash ash dash zsh ksh ; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ] ; then brew update; brew install bash ash dash zsh ksh ; fi
 
 # Whatever the current shebang, replace with hardcoded shell
 #script: >
