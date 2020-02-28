@@ -239,6 +239,10 @@ usage() {
   echo '     VALUE="$(JSON.sh --shellable-output=strings -x '"'"'^"field"$'"'"')"'
   echo "--shellable-output=arrays - Do not print the path column, add quotes:"
   echo '     ARR=( $(JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"') )'
+  echo '     ARR=(`JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"'`)'
+  echo "--get-string 'regex' - Alias to -l -x 'regex' --shellable-output=strings"
+  echo "--get-arrays 'regex' - Alias to -l -x 'regex' --shellable-output=arrays"
+  echo "     intended for cases where caller knows data schema to make assumptions."
   echo "NOTE: The --shellable-output options only make sense for -l/-b mode,"
   echo "or -x preferably with -l/-b modes. Each found value is output with EOL"
   echo 'so you can pipe the output to `| while read LINE; do ... ; done` sanely.'
@@ -396,10 +400,20 @@ parse_options() {
       -Sa=*)
           SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-Sa=,,' 2>/dev/null | unquote )"
       ;;
-      -x) EXTRACT_JPATH="$2"
+      -x|--get-strings|--get-arrays|--get-array)
+          case "$1" in
+            --get-string*) SHELLABLE_OUTPUT="strings" ; LEAFONLY=1 ;;
+            --get-array*) SHELLABLE_OUTPUT="arrays" ; LEAFONLY=1 ;;
+          esac
+          EXTRACT_JPATH="$2"
           shift
       ;;
-      -x=*) EXTRACT_JPATH="$(echo "$1" | $GSED 's,^-x=,,' 2>/dev/null)"
+      -x=*|--get-strings=*|--get-arrays=*|--get-array=*)
+          EXTRACT_JPATH="$(echo "$1" | $GSED 's,^\(-x\|--get-strings*\|--get-arrays*\)=,,' 2>/dev/null)"
+          case "$1" in
+            --get-string*) SHELLABLE_OUTPUT="strings" ; LEAFONLY=1 ;;
+            --get-array*) SHELLABLE_OUTPUT="arrays" ; LEAFONLY=1 ;;
+          esac
       ;;
       --shellable-output=strings)
           SHELLABLE_OUTPUT="strings"
