@@ -853,10 +853,10 @@ parse() {
   print_debug $DEBUGLEVEL_PRINTTOKEN "parse(1):" "token='$token'"
   parse_value
   read -r token
-  print_debug $DEBUGLEVEL_PRINTTOKEN "parse(2):" "token='$token'"
+  print_debug $DEBUGLEVEL_PRINTTOKEN "parse(2):" "token='$token' QUICK_ABORT=$QUICK_ABORT"
   case "$token" in
     '') ;;
-    *) throw "EXPECTED EOF GOT '$token'" ;;
+    *) $QUICK_ABORT || throw "EXPECTED EOF GOT '$token'" ;;
   esac
 }
 
