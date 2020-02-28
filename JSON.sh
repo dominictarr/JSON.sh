@@ -240,7 +240,6 @@ usage() {
   echo "--shellable-output=string - same but returns one string (first hit if any)"
   echo "--shellable-output=arrays - Do not print the path column, add quotes:"
   echo '     ARR=( $(JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"') )'
-  echo '     ARR=(`JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"'`)'
   echo "--get-string 'regex' - Alias to -l -x 'regex' --shellable-output=string"
   echo "--get-strings 'regex' - Alias to -l -x 'regex' --shellable-output=strings"
   echo "--get-array(s) 'regex' - Alias to -l -x 'regex' --shellable-output=arrays"
