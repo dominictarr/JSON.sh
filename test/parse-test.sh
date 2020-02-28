@@ -12,7 +12,7 @@ ptest () {
 
 fails=0
 i=0
-echo "1..4"
+echo "1..6"
 for input in \
     '"oooo"  ' \
     '[true, 1, [0, {}]]  ' \
@@ -35,6 +35,30 @@ then
   fails="$(expr $fails + 1)"
 else
   echo "ok $i - package.json"
+fi
+
+i="$(expr $i + 1)"
+JSONSH_OUT="$(jsonsh_cli --shellable-output=strings -x '^"name"$' < ../package.json 2>/dev/null)" \
+&& [ -n "$JSONSH_OUT" ] ; JSONSH_RES=$?
+if [ "$JSONSH_RES" = 0 ] && [ "$JSONSH_OUT" = 'JSON.sh' ] ; then
+  echo "ok $i - package.json with extraction of one entry"
+else
+  echo "not ok $i - Parsing package.json with extraction of one entry failed!"
+  fails="$(expr $fails + 1)"
+fi
+
+i="$(expr $i + 1)"
+JSONSH_OUT="$(jsonsh_cli -So=-r -b --shellable-output=arrays -x '^"repository"' < ../package.json 2>/dev/null)" \
+&& [ -n "$JSONSH_OUT" ] ; JSONSH_RES=$?
+if [ "$JSONSH_RES" = 0 ] && [ "$JSONSH_OUT" = '"https://github.com/dominictarr/JSON.sh.git"
+"git"' ] ; then
+  echo "ok $i - package.json with extraction of several entries with array markup"
+else
+  echo "not ok $i - Parsing package.json with extraction of several entries with array markup failed!"
+  echo "==="
+  echo "$JSONSH_OUT"
+  echo "==="
+  fails="$(expr $fails + 1)"
 fi
 
 echo "$i test(s) executed"
