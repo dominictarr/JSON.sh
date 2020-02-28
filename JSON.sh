@@ -237,11 +237,13 @@ usage() {
   echo "     around values to ease backticked picking of exact data path items"
   echo '     into scripts (non-exact matches will be same as multiword text):'
   echo '     VALUE="$(JSON.sh --shellable-output=strings -x '"'"'^"field"$'"'"')"'
+  echo "--shellable-output=string - same but returns one string (first hit if any)"
   echo "--shellable-output=arrays - Do not print the path column, add quotes:"
   echo '     ARR=( $(JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"') )'
   echo '     ARR=(`JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"'`)'
-  echo "--get-string 'regex' - Alias to -l -x 'regex' --shellable-output=strings"
-  echo "--get-arrays 'regex' - Alias to -l -x 'regex' --shellable-output=arrays"
+  echo "--get-string 'regex' - Alias to -l -x 'regex' --shellable-output=string"
+  echo "--get-strings 'regex' - Alias to -l -x 'regex' --shellable-output=strings"
+  echo "--get-array(s) 'regex' - Alias to -l -x 'regex' --shellable-output=arrays"
   echo "     intended for cases where caller knows data schema to make assumptions."
   echo "NOTE: The --shellable-output options only make sense for -l/-b mode,"
   echo "or -x preferably with -l/-b modes. Each found value is output with EOL"
@@ -400,25 +402,30 @@ parse_options() {
       -Sa=*)
           SORTDATA_ARR="$GSORT $(echo "$1" | $GSED 's,^-Sa=,,' 2>/dev/null | unquote )"
       ;;
-      -x|--get-strings|--get-arrays|--get-array)
+      -x|--get-strings|--get-string|--get-arrays|--get-array)
           case "$1" in
-            --get-string*) SHELLABLE_OUTPUT="strings" ; LEAFONLY=1 ;;
+            --get-string) SHELLABLE_OUTPUT="string" ; LEAFONLY=1 ;;
+            --get-strings) SHELLABLE_OUTPUT="strings" ; LEAFONLY=1 ;;
             --get-array*) SHELLABLE_OUTPUT="arrays" ; LEAFONLY=1 ;;
           esac
           EXTRACT_JPATH="$2"
           shift
       ;;
-      -x=*|--get-strings=*|--get-arrays=*|--get-array=*)
+      -x=*|--get-strings=*|--get-string=*|--get-arrays=*|--get-array=*)
           EXTRACT_JPATH="$(echo "$1" | $GSED 's,^\(-x\|--get-strings*\|--get-arrays*\)=,,' 2>/dev/null)"
           case "$1" in
-            --get-string*) SHELLABLE_OUTPUT="strings" ; LEAFONLY=1 ;;
+            --get-string) SHELLABLE_OUTPUT="string" ; LEAFONLY=1 ;;
+            --get-strings) SHELLABLE_OUTPUT="strings" ; LEAFONLY=1 ;;
             --get-array*) SHELLABLE_OUTPUT="arrays" ; LEAFONLY=1 ;;
           esac
+      ;;
+      --shellable-output=string)
+          SHELLABLE_OUTPUT="string"
       ;;
       --shellable-output=strings)
           SHELLABLE_OUTPUT="strings"
       ;;
-      --shellable-output=arrays)
+      --shellable-output=array|--shellable-output=arrays)
           SHELLABLE_OUTPUT="arrays"
       ;;
       --no-newline)
@@ -711,7 +718,9 @@ $key:$value"
 }
 
 REGEX_NUMBER='^[+-]?([.][0-9]+|(0+|[1-9][0-9]*)([.][0-9]*)?)([eE][+-]?[0-9]*)?$'
+QUICK_ABORT=false
 parse_value() {
+  if $QUICK_ABORT ; then return 0 ; fi
   local jpath="${1:+$1,}$2"
   local isleaf=0
   local isempty=0
@@ -831,6 +840,7 @@ parse_value() {
         esac
     fi
     case "$SHELLABLE_OUTPUT" in
+        string)   printf '%s\n' "$pvalue" ; QUICK_ABORT=true ; return 0 ;;
         strings)  printf '%s\n' "$pvalue" ; return 0 ;;
         arrays)   printf '"%s"\n' "$pvalue" ; return 0 ;;
         *)        printf '[%s]\t%s\n' "$jpath" "$value" ;;
