@@ -177,6 +177,7 @@ NORMALIZE_NUMBERS=0
 NORMALIZE_NUMBERS_FORMAT='%.6f'
 NORMALIZE_NUMBERS_STRIP=0
 EXTRACT_JPATH=""
+SHELLABLE_OUTPUT=""
 TOXIC_NEWLINE=0
 COOKASTRING=0
 COOKASTRING_INPUT=""
@@ -232,6 +233,15 @@ usage() {
   echo "     extract the items rooted at path(s) matching the regex (see the"
   echo "     comma-separated list of nested hierarchy names in general output,"
   echo "     brackets not included) e.g. regex='^\"level1obj\",\"level2arr\",0'"
+  echo "--shellable-output=strings - Do not print the path column nor quotes"
+  echo "     around values to ease backticked picking of exact data path items"
+  echo '     into scripts (non-exact matches will be same as multiword text):'
+  echo '     VALUE="$(JSON.sh --shellable-output=strings -x '"'"'^"field"$'"'"')"'
+  echo "--shellable-output=arrays - Do not print the path column, add quotes:"
+  echo '     ARR=( $(JSON.sh --shellable-output=arrays -x '"'"'^"array",[0-9]'"'"') )'
+  echo "NOTE: The --shellable-output options only make sense for -l/-b mode,"
+  echo "or -x preferably with -l/-b modes. Each found value is output with EOL"
+  echo 'so you can pipe the output to `| while read LINE; do ... ; done` sanely.'
   echo "--no-newline - rather than concatenating detected line breaks in markup,"
   echo "     return with error when this is seen in input"
   echo "-d - Enable debugging traces to stderr (repeat or use -d=NUM to bump)"
@@ -391,6 +401,12 @@ parse_options() {
       ;;
       -x=*) EXTRACT_JPATH="$(echo "$1" | $GSED 's,^-x=,,' 2>/dev/null)"
       ;;
+      --shellable-output=strings)
+          SHELLABLE_OUTPUT="strings"
+      ;;
+      --shellable-output=arrays)
+          SHELLABLE_OUTPUT="arrays"
+      ;;
       --no-newline)
           TOXIC_NEWLINE=1
       ;;
@@ -415,6 +431,10 @@ parse_options() {
     esac
     shift 1
   done
+
+  if [ -n "$SHELLABLE_OUTPUT" ] && [ -z "$EXTRACT_JPATH" ] && [ "$LEAFONLY" = 0 ] ; then
+    throw "ERROR: Option --shellable-output only makes sense with -x 'regex' and/or -l/-b"
+  fi
 
   validate_debuglevel
 
@@ -789,7 +809,19 @@ parse_value() {
 	"isleaf='$isleaf'/L='$LEAFONLY' isempty='$isempty'/P='$PRUNE':" \
 	"print='$print'" >&2
 
-  [ "$print" -gt 0 ] && printf "[%s]\t%s\n" "$jpath" "$value"
+  if [ "$print" -gt 0 ] ; then
+    if [ -n "$SHELLABLE_OUTPUT" ]; then
+        case "$value" in
+            '"'*'"') pvalue="$(echo "$value" | $GSED -e 's,^",,' -e 's,"$,,')" ;;
+            *) pvalue="$value" ;;
+        esac
+    fi
+    case "$SHELLABLE_OUTPUT" in
+        strings)  printf '%s\n' "$pvalue" ; return 0 ;;
+        arrays)   printf '"%s"\n' "$pvalue" ; return 0 ;;
+        *)        printf '[%s]\t%s\n' "$jpath" "$value" ;;
+    esac
+  fi
   :
 }
 
