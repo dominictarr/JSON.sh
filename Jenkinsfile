@@ -25,8 +25,10 @@ def testShell(String PATH_SHELL, String TAG_SHELL, boolean ALLOW_UNSTABLE) {
             unstash 'prepped'
             timeout (time: "${params.USE_TEST_TIMEOUT}".toInteger(), unit: 'MINUTES') {
                 def statusCode = sh returnStatus:true, script: """
+rm -rf ./tmp || true ; mkdir -p tmp
 if test -n "${params.DEBUG}" ; then DEBUG="${params.DEBUG}"; export DEBUG; fi && \
 SHELL_PROGS="$PATH_SHELL" && export SHELL_PROGS && \
+tmp="`pwd`/tmp" && export tmp && \
 { make check || {
     RES=\$?
     if test "$ALLOW_UNSTABLE" = "true" ; then
