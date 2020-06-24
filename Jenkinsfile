@@ -133,7 +133,7 @@ pipeline {
             description: 'PATH-resolved or full path to the tested interpreter on the testing system',
             name: 'PATH_SHELL_DASH')
         booleanParam (
-            defaultValue: true,
+            defaultValue: false,
             description: 'Attempt a test with specified shell interpreter in this run?',
             name: 'DO_TEST_SHELL_ZSH')
         booleanParam (
