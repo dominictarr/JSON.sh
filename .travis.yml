@@ -37,7 +37,7 @@ env:
 #    - SHELL_PROGS=ksh88
 #    - SHELL_PROGS=ksh93
 
-# Note that this does not inherit env: or packages from above
+# Note that this does not inherit env: nor addons:apt:packages from above
 matrix:
   include:
   - os: macos
@@ -53,6 +53,12 @@ matrix:
 ### Currently the syntax of ksh needs too many syntax adaptations vs other shells
 #  - os: macos
 #    env: SHELL_PROGS=ksh
+  allow_failures:
+  - env: SHELL_PROGS=zsh
+  - env: SHELL_PROGS=busybox
+#  - env: SHELL_PROGS=ksh
+#  - env: SHELL_PROGS=ksh88
+#  - env: SHELL_PROGS=ksh93
 
 # Currently there is no brew for busybox, ash ...
 before_install:
@@ -68,11 +74,11 @@ before_install:
 
 # Whatever the current shebang, replace with hardcoded shell
 #script: >
-#  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && ./all-tests.sh &&
-#  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && ./all-tests.sh &&
-#  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && ./all-tests.sh
+#  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && make check &&
+#  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && make check &&
+#  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && make check
 
 # This version of the script can use specified shell to source and test JSON.sh
 # Note that some platforms can lack some interpreters, so a test run
 # is effectively skipped and the test looks green if that's the case
-script: ./all-tests.sh
+script: make check
