@@ -1,23 +1,38 @@
 #!/bin/sh
 
-cd ${0%/*}
+cd "$(dirname "$0")"
 
 # Can't detect sourcing in sh, so immediately terminate the attempt to parse
+JSONSH_SOURCED=yes
 . ../JSON.sh </dev/null
+
+[ -n "${tmp-}" ] || tmp="/tmp"
+
+# Avoid duplicate // in plain-shell syntax
+tmp="$(echo "$tmp" | sed 's,/+,/,g')"
+case "$tmp" in
+    */) ;;
+    *)  tmp="$tmp/" ;;
+esac
 
 i=0
 fails=0
 ttest () {
-  i=$((i+1))
-  local input="$1"; shift
-  local expected="$(printf '%s\n' "$@")"
-  echo "$expected" > /tmp/json_ttest_expected
-  if echo "$input" | tokenize | diff -u - /tmp/json_ttest_expected
+  i="$(expr $i + 1)"
+  input="$1"; shift
+  expected="$(printf '%s\n' "$@")"
+  echo "$expected" > "${tmp}"json_ttest_expected
+
+  # Such explicit chaining is equivalent to "pipefail" in non-Bash interpreters
+  JSONSH_OUT="$(echo "$input" | tokenize)" && \
+    printf '%s\n' "$JSONSH_OUT" | diff -u - "${tmp}"json_ttest_expected
+  JSONSH_RES=$?
+  if [ "$JSONSH_RES" = 0 ]
   then
-    echo "ok $i - $input"    
-  else 
+    echo "ok $i - $input"
+  else
     echo "not ok $i - $input"
-    fails=$((fails+1))
+    fails="$(expr $fails + 1)"
   fi
 }
 
@@ -46,10 +61,14 @@ ttest '[ null   ,  -110e10, "null" ]' \
 ttest '{"e": false}'     '{' '"e"' ':' 'false' '}'
 ttest '{"e": "string"}'  '{' '"e"' ':' '"string"' '}'
 
-if ! cat ../package.json | tokenize >/dev/null
+i="$(expr $i + 1)"
+input="Tokenizing the 'package.json' file"
+if tokenize < ../package.json >/dev/null
 then
-  fails=$((fails+1))
-  echo "Tokenizing package.json failed!"
+  echo "ok $i - $input"
+else
+  echo "not ok $i - $input"
+  fails="$(expr $fails + 1)"
 fi
 
 echo "$fails test(s) failed"

@@ -1,0 +1,47 @@
+["var8"]	"string\nwith\nproper\\\nnewlines"
+["var38"]	""
+["var1"]	"val1"
+["var0"]	"escaped \" quote"
+["split\nkey"]	"value"
+["splitValue"]	"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")"
+["emptystr"]	""
+["emptyobj"]	{}
+["emptyarr"]	[]
+["array",0]	20
+["array",1]	3
+["array",2]	0
+["array",3]	"z"
+["array",4]	"escaping\"several\"\"\nquote\"s and\nnewlines"
+["array",5]	"b"
+["array",6]	"a"
+["array",7]	"\""
+["array",8]	""
+["array",9]	""
+["array"]	[20,3,0,"z","escaping\"several\"\"\nquote\"s and\nnewlines","b","a","\"","",""]
+["arrOfObjs",0,"var"]	"val30"
+["arrOfObjs",0,"str"]	"s"
+["arrOfObjs",0]	{"var":"val30","str":"s"}
+["arrOfObjs",1,"var"]	"val2"
+["arrOfObjs",1,"str"]	"z"
+["arrOfObjs",1]	{"var":"val2","str":"z"}
+["arrOfObjs",2,"var"]	"val2"
+["arrOfObjs",2,"str"]	"x"
+["arrOfObjs",2]	{"var":"val2","str":"x"}
+["arrOfObjs",3,"var"]	"val1"
+["arrOfObjs",3,"str"]	5
+["arrOfObjs",3]	{"var":"val1","str":5}
+["arrOfObjs",4,"var"]	"val1"
+["arrOfObjs",4,"str"]	"s"
+["arrOfObjs",4]	{"var":"val1","str":"s"}
+["arrOfObjs",5,"var"]	"val1"
+["arrOfObjs",5,"str"]	"\""
+["arrOfObjs",5]	{"var":"val1","str":"\""}
+["arrOfObjs",6,"var"]	"val1"
+["arrOfObjs",6,"str"]	"S"
+["arrOfObjs",6]	{"var":"val1","str":"S"}
+["arrOfObjs",7,"var"]	"val1"
+["arrOfObjs",7,"str"]	"5"
+["arrOfObjs",7]	{"var":"val1","str":"5"}
+["arrOfObjs"]	[{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":5},{"var":"val1","str":"s"},{"var":"val1","str":"\""},{"var":"val1","str":"S"},{"var":"val1","str":"5"}]
+["aNumber"]	1
+[]	{"var8":"string\nwith\nproper\\\nnewlines","var38":"","var1":"val1","var0":"escaped \" quote","split\nkey":"value","splitValue":"there\n  are a newline and three spaces (one after \"there\" and two before \"are\")","emptystr":"","emptyobj":{},"emptyarr":[],"array":[20,3,0,"z","escaping\"several\"\"\nquote\"s and\nnewlines","b","a","\"","",""],"arrOfObjs":[{"var":"val30","str":"s"},{"var":"val2","str":"z"},{"var":"val2","str":"x"},{"var":"val1","str":5},{"var":"val1","str":"s"},{"var":"val1","str":"\""},{"var":"val1","str":"S"},{"var":"val1","str":"5"}],"aNumber":1}

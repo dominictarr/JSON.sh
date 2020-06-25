@@ -1,0 +1,13 @@
+{"var1":"val1","split
+key":"value","var0":"escaped \" quote","splitValue":"there
+  are a newline and three spaces (one after \"there\" and two before \"are\")",
+"array":["z","a","b",3,20,0,"","","\""
+,"escaping\"several\"\"
+quote\"s and
+newlines"],"aNumber":1,"var8":"string\nwith\nproper\\\nnewlines",
+"var38":"","emptyarr":[],"emptyobj":{},"emptystr":"",
+"arrOfObjs":[{"var":"val1","str":"s"},{"var":"val30","str":"s"},
+  {"var":"val2","str":"z"},{"var":"val2","str":"x"},
+  {"var":"val1","str":"S"},{"var":"val1","str":"\""},
+{"var":"val1","str":5},{"var":"val1","str":"5"}]}
+
