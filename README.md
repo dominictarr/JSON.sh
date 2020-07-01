@@ -93,7 +93,11 @@ the markup (multilines are automatically escaped into backslash+n):
 
 * `-S`
 > Sort the contents of items in JSON markup and leaf-list markup:
-`sort` objects by key names and then values, and arrays by values
+`sort` objects by key names and then values, and arrays by values.
+
+Note that by JSON spec, contents of `[]` arrays are normally treated
+as an ordered list, so `[1,2,3] != [3,2,1]` unless your own schema
+and code allow them to be randomly ordered with same set of items.
 
 * `-S='args'`
 > Use `sort $args` for content sorting, e.g. use `-S='-n -r'` for
