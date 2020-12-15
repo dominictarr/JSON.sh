@@ -94,10 +94,12 @@ SHELL_REGEX=no
 SHELL_TWOSLASH=no
 
 SHELL_SUPPORTED=yes
+SHELL_PIPEFAIL=no
 case "$SHELL_BASENAME" in
     bash)
         SHELL_REGEX=yes
         SHELL_TWOSLASH=yes
+        SHELL_PIPEFAIL=yes
         ;;
     dash|ash) # The spartan bare minimum
         ;;
@@ -117,6 +119,7 @@ case "$SHELL_BASENAME" in
             SHELL_REGEX=yes
             SHELL_TWOSLASH=yes
             SHELL_BASENAME=bash
+            SHELL_PIPEFAIL=yes
         elif [ -n "${ZSH_VERSION-}" ] ; then
             SHELL_REGEX=yes
             SHELL_TWOSLASH=unquoted
@@ -613,8 +616,13 @@ tokenize() {
   # Force zsh to expand $GREP_O into multiple words
   is_wordsplit_disabled="$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')"
   if [ "$is_wordsplit_disabled" != 0 ]; then setopt shwordsplit; fi
+  # Note: we do not fail for empty documents (including whitespace-only) here
+  # The pedantic mode handles that if desired by caller
+  # We do just in case make sure last line ends with EOL however
+  # which in particular fixes cases like `JSON.sh < /dev/null`
+  { cat ; echo ""; } | \
   tee_stderr BEFORE_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE | \
-  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|." | $GEGREP -v "^$SPACE"'$' | \
+  $GREP_O "$STRING|$NUMBER|$KEYWORD|$SPACE|.|^$" | { $GEGREP -v "^$SPACE"'*$' || true ; } | \
   tee_stderr AFTER_TOKENIZER $DEBUGLEVEL_PRINTTOKEN_PIPELINE
   RES=$?
   if [ "$is_wordsplit_disabled" != 0 ]; then unsetopt shwordsplit; fi
@@ -855,16 +863,24 @@ parse() {
   read -r token
   print_debug $DEBUGLEVEL_PRINTTOKEN "parse(2):" "token='$token' QUICK_ABORT=$QUICK_ABORT"
   case "$token" in
-    '') ;;
+    '') return 0 ;;
     *) $QUICK_ABORT || throw "EXPECTED EOF GOT '$token'" ;;
   esac
 }
 
 smart_parse() {
+  ### Piping obfuscates errors thrown by parse()
+  local THIS_PID=""
+  if [ "$SHELL_PIPEFAIL" = yes ]; then
+    set -o pipefail
+  else
+    THIS_PID=$$
+  fi
+
   strip_newlines | \
   tokenize | if [ -n "$SORTDATA_OBJ$SORTDATA_ARR" ] ; then
       ### Any type of sort was enabled
-      ( NORMALIZE=1 LEAFONLY=0 BRIEF=0 parse ) \
+      ( ( NORMALIZE=1 LEAFONLY=0 BRIEF=0 parse ) || { RET=$? ; if [ -n "$THIS_PID" ] ; then kill -15 $THIS_PID ; exit $RET; fi; } ) \
       | tokenize | parse
     else
       parse
