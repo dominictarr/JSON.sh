@@ -821,7 +821,8 @@ parse_value() {
             isempty=1
         else
             throw "EXPECTED value GOT '${token:-EOF}'"
-        fi ;;
+        fi
+        ;;
     +*|-*|[0-9]*|.*)  # Potential number - separate hit in case for efficiency
        print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "token '$token' is a suspected number" >&2
@@ -877,7 +878,9 @@ parse_value() {
 
   if [ "$NORMALIZE" = 1 ]; then
     # Ensure a "true" output from the "if" for "return"
-    if [ "$jpath" != '' ]; then : ; else
+    if [ "$jpath" != '' ]; then
+        :
+    else
         print_debug $DEBUGLEVEL_PRINTPATHVAL \
             "Non-root keys were skipped due to normalization mode"
         printf "%s\n" "$value"
