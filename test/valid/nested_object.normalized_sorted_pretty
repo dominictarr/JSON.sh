@@ -1,0 +1,8 @@
+{
+	"number" : 5,
+	"object" : {
+		"empty" : {
+		},
+		"key" : "value"
+	}
+}
