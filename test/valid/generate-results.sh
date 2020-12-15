@@ -33,6 +33,14 @@ generate() {
     $JSONSH -N='-n' < "$F" > "$B.$EXT" || \
         { RES=$?; echo "ERROR with $EXT"; }
 
+    EXT=normalized_pretty
+    $JSONSH -N --pretty-print < "$F" > "$B.$EXT" || \
+        { RES=$?; echo "ERROR with $EXT"; }
+
+    EXT=normalized_sorted_pretty
+    $JSONSH -N='-n' --pretty-print < "$F" > "$B.$EXT" || \
+        { RES=$?; echo "ERROR with $EXT"; }
+
     return $RES
 }
 
