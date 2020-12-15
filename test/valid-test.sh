@@ -32,8 +32,8 @@ CHOMPEXT='\.\(parsed\|sorted\|numnormalized\|normalized\|json\).*$'
 [ -z "$FILES" ] && echo "error - no files found to test!" >&2 && exit 1
 
 tests="$(echo "$FILES" | wc -l)"
-### We currently have up to 8 extensions to consider per test
-tests="$(expr $tests \* 8)"
+### We currently have up to 10 extensions to consider per test
+tests="$(expr $tests \* 10)"
 echo "1..$tests"
 
 # Force zsh to expand $FILES into multiple words
@@ -46,6 +46,7 @@ do
   for EXT in parsed sorted normalized normalized_sorted \
         numnormalized numnormalized_stripped \
         normalized_numnormalized normalized_numnormalized_stripped \
+        normalized_pretty normalized_sorted_pretty \
   ; do
     if [ ! -f "$input" ]; then
       echo "error - missing input file '$input', assuming all its tests failed"
@@ -61,6 +62,8 @@ do
         sorted) OPTIONS="-S='-n -r'" ;;
         normalized) OPTIONS="-N" ;;
         normalized_sorted) OPTIONS="-N=-n" ;;
+        normalized_pretty) OPTIONS="-N --pretty-print" ;;
+        normalized_sorted_pretty) OPTIONS="-N=-n --pretty-print" ;;
         numnormalized) OPTIONS="-Nn=%.12f" ;;
         numnormalized_stripped) OPTIONS="-Nnx" ;;
         normalized_numnormalized) OPTIONS="-N=-n -Nn=%.12f" ;;
